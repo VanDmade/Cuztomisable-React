@@ -1,5 +1,6 @@
 // providers/AppProvider.tsx
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConfigProvider } from './ConfigProvider';
 import { ThemeWrapper } from './ThemeWrapper';
 
@@ -10,8 +11,10 @@ type AppProviderProps = {
 
 export const AppProvider = ({ config, children }: AppProviderProps) => {
     return (
-        <ConfigProvider config={config}>
-            <ThemeWrapper>{children}</ThemeWrapper>
-        </ConfigProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ConfigProvider config={config}>
+                <ThemeWrapper>{children}</ThemeWrapper>
+            </ConfigProvider>
+        </GestureHandlerRootView>
     );
 };

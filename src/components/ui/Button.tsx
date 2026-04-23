@@ -1,5 +1,3 @@
-// src/components/ui/Button.tsx
-
 import React, { useMemo } from 'react';
 import {
     ActivityIndicator,
@@ -69,6 +67,7 @@ export type ButtonProps = Omit<PressableProps, 'style' | 'children' | 'onPress'>
     minWidth?: number;
     minHeight?: number;
     hitSlopPadding?: number;
+    iconOnly?: boolean;
     onPress?: (event: GestureResponderEvent) => void;
 };
 
@@ -86,11 +85,12 @@ function isNumber(v: unknown): v is number {
 
 function resolveIntentColors(theme: ThemeColors, intent: ButtonIntent, variant: ButtonVariant) {
     const intentColor = theme[intent];
+    const intentTextColor = theme.buttonText?.[intent] || theme.buttonTextColor;
 
     if (variant === 'solid') {
         return {
             background: intentColor,
-            foreground: theme.buttonTextColor,
+            foreground: intentTextColor,
             border: intentColor,
             pressedBackground: 'rgba(0,0,0,0.10)',
             disabledBackground: theme.border,
@@ -159,6 +159,7 @@ export default function Button({
     minWidth,
     minHeight,
     hitSlopPadding = 8,
+    iconOnly = false,
     onPress,
     ...pressableProps
 }: ButtonProps) {
@@ -217,6 +218,15 @@ export default function Button({
 
     const wantFull = fullWidth;
 
+    const resolvedMinHeight = isNumber(minHeight) ? minHeight : preset.minHeight;
+    const resolvedMinWidth = iconOnly
+        ? isNumber(minWidth)
+            ? minWidth
+            : resolvedMinHeight
+        : isNumber(minWidth)
+        ? minWidth
+        : undefined;
+
     return (
         <View style={containerStyle}>
             <Pressable
@@ -227,9 +237,9 @@ export default function Button({
                 onPress={effectiveOnPress}
                 style={[
                     {
-                        width: wantFull ? '100%' : undefined,
-                        minWidth: isNumber(minWidth) ? minWidth : undefined,
-                        minHeight: isNumber(minHeight) ? minHeight : preset.minHeight,
+                        width: iconOnly ? resolvedMinWidth : wantFull ? '100%' : undefined,
+                        minWidth: resolvedMinWidth,
+                        minHeight: resolvedMinHeight,
                         borderRadius: radius,
                         backgroundColor: computed.backgroundColor,
                         borderColor: computed.borderColor,
@@ -238,14 +248,14 @@ export default function Button({
                     },
                     shadow
                         ? [
-                            {
-                                elevation: 2,
-                                shadowOpacity: 0.15,
-                                shadowRadius: 6,
-                                shadowOffset: { width: 0, height: 2 },
-                            },
-                            shadowStyle,
-                        ]
+                              {
+                                  elevation: 2,
+                                  shadowOpacity: 0.15,
+                                  shadowRadius: 6,
+                                  shadowOffset: { width: 0, height: 2 },
+                              },
+                              shadowStyle,
+                          ]
                         : null,
                     buttonStyle,
                 ]}
@@ -269,39 +279,44 @@ export default function Button({
                                 justifyContent,
                                 paddingHorizontal: isNumber(paddingHorizontal)
                                     ? paddingHorizontal
+                                    : iconOnly
+                                    ? preset.py
                                     : variant === 'text'
                                     ? 0
                                     : preset.px,
                                 paddingVertical: isNumber(paddingVertical)
                                     ? paddingVertical
+                                    : iconOnly
+                                    ? preset.py
                                     : variant === 'text'
                                     ? 8
                                     : preset.py,
-                                width: wantFull ? '100%' : undefined,
+                                width: wantFull && !iconOnly ? '100%' : undefined,
                                 gap: computedGap,
                             }}
                         >
                             {left && <View style={{ alignItems: 'center' }}>{left}</View>}
 
-                            {children ? (
-                                children
-                            ) : title ? (
-                                <Text
-                                    style={[
-                                        {
-                                            color: computed.foregroundColor,
-                                            fontSize: preset.fontSize,
-                                            fontWeight: typography.weights.medium,
-                                            flexShrink: 1,
-                                        },
-                                        textStyle,
-                                    ]}
-                                    numberOfLines={textNumberOfLines}
-                                    allowFontScaling={textAllowFontScaling}
-                                >
-                                    {title}
-                                </Text>
-                            ) : null}
+                            {!iconOnly &&
+                                (children ? (
+                                    children
+                                ) : title ? (
+                                    <Text
+                                        style={[
+                                            {
+                                                color: computed.foregroundColor,
+                                                fontSize: preset.fontSize,
+                                                fontWeight: typography.weights.medium,
+                                                flexShrink: 1,
+                                            },
+                                            textStyle,
+                                        ]}
+                                        numberOfLines={textNumberOfLines}
+                                        allowFontScaling={textAllowFontScaling}
+                                    >
+                                        {title}
+                                    </Text>
+                                ) : null)}
 
                             {right && <View style={{ alignItems: 'center' }}>{right}</View>}
 

@@ -1,4 +1,5 @@
 // src/components/form/Checkbox.tsx
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import {
     GestureResponderEvent,
@@ -69,7 +70,13 @@ export const FormCheckbox: React.FC<FormCheckboxProps> = ({
                             opacity: pressed && !disabled ? 0.9 : 1,
                         },
                     ]}>
-                    {value && <View style={styles.innerDot} />}
+                    {value && (
+                        <MaterialIcons
+                            name="check"
+                            size={16}
+                            color={theme.color.buttonText.primary ?? '#fff'}
+                        />
+                    )}
                 </Pressable>
                 <View style={styles.textContainer}>
                     <Text

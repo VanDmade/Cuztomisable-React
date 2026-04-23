@@ -4,7 +4,7 @@ import { getConfig } from '../providers/ConfigProvider'; // 👈 add this
 import { attachInterceptors } from './interceptors';
 
 export function getApi(): AxiosInstance {
-    const config = getConfig(); // 👈 pull globally
+    const config = getConfig();
 
     const DEVICE_TYPE =
         Platform.OS === 'android'
@@ -12,7 +12,6 @@ export function getApi(): AxiosInstance {
             : Platform.OS === 'ios'
             ? 'iOS'
             : 'Other';
-
     const api = axios.create({
         baseURL: config.baseUrl,
         headers: {
@@ -21,8 +20,6 @@ export function getApi(): AxiosInstance {
             Accept: 'application/json',
         },
     });
-
     attachInterceptors(api);
-
     return api;
 }

@@ -9,9 +9,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMessage } from '../../contexts/MessageContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
-export default function RegisterScreen({ logoSource }: { logoSource?: any }) {
+export default function RegisterScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { register } = useAuth();
@@ -41,7 +40,7 @@ export default function RegisterScreen({ logoSource }: { logoSource?: any }) {
                         theme={theme}
                         title="Sign Up"
                         subtitle="Your journey starts here"
-                        logoSource={logoSource || themeImages.logo} />
+                        logoSource={theme.image.logo} />
                     <View style={[theme.utils.mtlg, theme.utils.widthFull]}>
                         <FormInput
                             theme={theme}

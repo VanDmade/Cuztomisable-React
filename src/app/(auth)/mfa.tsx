@@ -9,11 +9,10 @@ import { useMessage } from '../../contexts/MessageContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useCountdown } from '../../hooks/useCountdown';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
 type Channel = 'email' | 'sms';
 
-export default function MfaScreen({ logoSource }: { logoSource?: any }) {
+export default function MfaScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { verifyMfaToken, sendMfaCode, finalizeMfa } = useAuth();
@@ -85,7 +84,7 @@ export default function MfaScreen({ logoSource }: { logoSource?: any }) {
                         theme={theme}
                         title="Two-Step Verification"
                         subtitle="Where should the code to be sent."
-                        logoSource={logoSource || themeImages.logo}
+                        logoSource={theme.image.logo}
                     />
                     {!sent ? (
                         <>

@@ -10,9 +10,8 @@ import { usePassword } from '../../contexts/PasswordContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useCountdown } from '../../hooks/useCountdown';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
-export default function ResetScreen({ logoSource }: { logoSource?: any }) {
+export default function ResetScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { finalize, verify, resend } = usePassword();
@@ -59,7 +58,7 @@ export default function ResetScreen({ logoSource }: { logoSource?: any }) {
                                 theme={theme}
                                 title="Reset Password"
                                 subtitle="Code has been sent!"
-                                logoSource={logoSource || themeImages.logo} />
+                                logoSource={theme.image.logo} />
                             <View style={[theme.utils.mtlg, theme.utils.widthFull]}>
                                 <FormInput
                                     theme={theme}
@@ -94,7 +93,7 @@ export default function ResetScreen({ logoSource }: { logoSource?: any }) {
                                 theme={theme}
                                 title="Reset Password"
                                 subtitle="Your code has been verified!"
-                                logoSource={logoSource || themeImages.logo} />
+                                logoSource={theme.image.logo} />
                             <View style={[theme.utils.mtlg, theme.utils.widthFull]}>
                                 <FormInput
                                     theme={theme}

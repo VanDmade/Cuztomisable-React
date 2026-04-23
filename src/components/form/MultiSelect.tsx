@@ -37,26 +37,27 @@ type MultiSelectProps<T = any> = {
     modalTitle?: string;
     showField?: boolean;
     maxSelections?: number;
+    renderChip?: (option: DropdownOption<T>) => React.ReactNode;
+    renderOption?: (option: DropdownOption<T>, selected: boolean) => React.ReactNode;
 };
 
-export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>(
-    {
-        theme,
-        value,
-        onChange,
-        options,
-        placeholder = 'Select...',
-        disabled = false,
-        bordered = false,
-        containerStyle,
-        textStyle,
-        fieldStyle,
-        modalTitle = 'Select options',
-        showField = true,
-        maxSelections,
-    }: MultiSelectProps<T>,
-    ref: React.Ref<MultiSelectHandle>
-) {
+export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>({
+    theme,
+    value,
+    onChange,
+    options,
+    placeholder = 'Select...',
+    disabled = false,
+    bordered = false,
+    containerStyle,
+    textStyle,
+    fieldStyle,
+    modalTitle = 'Select options',
+    showField = true,
+    maxSelections,
+    renderChip,
+    renderOption,
+}: MultiSelectProps<T>, ref: React.Ref<MultiSelectHandle>) {
     const activeTheme = theme ?? useTheme();
     const formStyles = useMemo(() => makeFormStyles(activeTheme), [activeTheme]);
     const [visible, setVisible] = useState(false);
@@ -118,7 +119,7 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
     };
 
     const selectedOptions = options.filter((opt) => value.some((v) => v === opt.value));
-
+    const atLeastOneSelected = value.length > 0;
     return (
         <>
             {showField ? (
@@ -126,6 +127,8 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                     style={[
                         styles.field,
                         activeTheme.utils.pxsm,
+                        !atLeastOneSelected && { paddingVertical: 16 },
+                        atLeastOneSelected && { paddingBottom: 10, paddingTop: 10 },
                         bordered && [{ borderWidth: 1, borderColor: activeTheme.color.border }, formStyles.input, activeTheme.utils.pxmd],
                         fieldStyle,
                         containerStyle,
@@ -133,29 +136,49 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                     ]}
                     onPress={open}
                     disabled={disabled}>
-                    {selectedOptions.length > 0 ? (
-                        <View style={styles.chips}>
-                            {selectedOptions.map((opt) => (
-                                <View key={String(opt.value)} style={[formStyles.chip, { backgroundColor: activeTheme.color.background }]}
-                                >
-                                    <Text style={[formStyles.chipText, textStyle, { color: activeTheme.color.text }]} numberOfLines={1}>
-                                        {opt.selectedText ?? opt.label}
-                                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {selectedOptions.length > 0 ? (
+                                <View style={styles.chips}>
+                                    {selectedOptions.map((opt) => (
+                                        <React.Fragment key={String(opt.value)}>
+                                            {renderChip ? (
+                                                renderChip(opt)
+                                            ) : (
+                                                <View
+                                                    style={[
+                                                        formStyles.chip,
+                                                        { backgroundColor: activeTheme.color.background },
+                                                    ]}>
+                                                    <Text
+                                                        style={[
+                                                            formStyles.chipText,
+                                                            textStyle,
+                                                            { color: activeTheme.color.text },
+                                                        ]}
+                                                        numberOfLines={1}>
+                                                        {opt.selectedText ?? opt.label}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
                                 </View>
-                            ))}
+                            ) : (
+                                <Text
+                                    style={[
+                                        { color: activeTheme.color.text },
+                                        activeTheme.typography.variants.placeholder,
+                                        textStyle,
+                                    ]}
+                                    numberOfLines={1}>
+                                    {placeholder}
+                                </Text>
+                            )}
+                            {/* Example usage: atLeastOneSelected ? ... : ... */}
                         </View>
-                    ) : (
-                        <Text
-                            style={[
-                                { color: activeTheme.color.text },
-                                activeTheme.typography.variants.placeholder,
-                                textStyle,
-                            ]}
-                            numberOfLines={1}>
-                            {placeholder}
-                        </Text>
-                    )}
-                    <Text style={[formStyles.chevron, textStyle]}>▼</Text>
+                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8 }]}>▼</Text>
+                    </View>
                 </TouchableOpacity>
             ) : null}
             <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
@@ -211,7 +234,6 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
 
 const styles = StyleSheet.create({
     field: {
-        minHeight: 44,
         flexDirection: 'row',
         alignItems: 'center',
         flexWrap: 'wrap',

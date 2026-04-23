@@ -10,6 +10,7 @@ type FormInputProps = {
     label?: string;
     error?: string;
     disabled?: boolean;
+    hideDetails?: boolean;
     capitalOnly?: boolean;
     onChangeText?: (text: string) => void;
     onClearError?: () => void;
@@ -20,6 +21,7 @@ export const FormInput: React.FC<FormInputProps> = ({
     label,
     error,
     disabled = false,
+    hideDetails = false,
     capitalOnly = false,
     onChangeText,
     onClearError,
@@ -64,9 +66,11 @@ export const FormInput: React.FC<FormInputProps> = ({
                 ]}
                 placeholderTextColor={activeTheme.color.muted}
                 onChangeText={handleChangeText} />
-            <Animated.View style={[formStyles.errorContainer, { opacity: fadeAnim }]}>
-                <Text style={activeTheme.typography.variants.error}>{error || ' '}</Text>
-            </Animated.View>
+            {!hideDetails && (
+                <Animated.View style={[formStyles.errorContainer, { opacity: fadeAnim }]}>
+                    <Text style={activeTheme.typography.variants.error}>{error || ' '}</Text>
+                </Animated.View>
+            )}
         </View>
     );
 };

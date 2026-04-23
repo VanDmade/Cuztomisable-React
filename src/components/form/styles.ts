@@ -52,7 +52,7 @@ export const makeFormStyles = (theme: Theme) => {
             paddingHorizontal: 10,
             paddingVertical: 6,
             marginRight: 8,
-            marginBottom: 8,
+            marginVertical: 1.125,
         },
         chipText: {
             fontSize: 12,

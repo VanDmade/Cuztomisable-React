@@ -1,12 +1,14 @@
 // src/components/table/DataTable.tsx
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, ScrollView, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
-import { api } from '../../api';
+import { getApi as api } from '../../api/api';
 import { Dropdown, type DropdownOption } from '../../components/form/Dropdown';
 import { FormInput } from '../../components/form/Input';
 import Button from '../../components/ui/Button';
 import { useTheme } from '../../providers/ThemeProvider';
+import { DataTableRow } from './rows/DataTableRow';
 
 export type DataTableColumn<T> = {
     key: string;
@@ -38,17 +40,24 @@ type PaginationMeta = {
 
 type DataTableProps<T> = {
     url?: string;
-    name?: string | null;
     columns: DataTableColumn<T>[];
-    data?: T[];
     rowKey?: (row: T, index: number) => string | number;
     searchable?: boolean;
     filters?: DataTableFilter[];
+    filterButton?: React.ReactNode;
     initialPageSize?: number;
     pageSizeOptions?: number[];
     extraParams?: Record<string, any>;
     onRowPress?: (row: T) => void;
-    transformResponse?: (payload: any) => { rows: T[]; meta?: PaginationMeta };
+    getRowStyle?: (row: T, index: number) => ViewStyle | undefined;
+    getCellStyle?: (row: T, colKey: string, index: number) => ViewStyle | undefined;
+    getCellTextStyle?: (row: T, colKey: string, index: number) => TextStyle | undefined;
+    showHeader?: boolean;
+    renderRow?: (props: {
+        item: T;
+        index: number;
+        setRows: React.Dispatch<React.SetStateAction<T[]>>;
+    }) => React.ReactNode;
 };
 
 const DEFAULT_PAGE_SIZES = [10, 25, 50];
@@ -57,34 +66,42 @@ function extractRows<T>(payload: any): { rows: T[]; meta?: PaginationMeta } {
     if (!payload) {
         return { rows: [] };
     }
+
     if (Array.isArray(payload)) {
         return { rows: payload };
     }
-    if (Array.isArray(payload?.data)) {
-        return { rows: payload.data, meta: payload.meta ?? payload.pagination };
+
+    if (Array.isArray(payload.data)) {
+        const { data, ...meta } = payload;
+        return { rows: data, meta };
     }
+
     if (Array.isArray(payload?.items)) {
         return { rows: payload.items, meta: payload.meta ?? payload.pagination };
     }
+
     return { rows: [], meta: payload?.meta ?? payload?.pagination };
 }
 
 export function DataTable<T>({
     url,
-    name = null,
     columns,
-    data,
     rowKey,
     searchable = true,
     filters = [],
+    filterButton,
     initialPageSize = 10,
     pageSizeOptions = DEFAULT_PAGE_SIZES,
     extraParams,
     onRowPress,
-    transformResponse,
+    getRowStyle,
+    getCellStyle,
+    getCellTextStyle,
+    showHeader = true,
+    renderRow,
 }: DataTableProps<T>) {
     const theme = useTheme();
-    const isClient = data !== undefined;
+
     const [rows, setRows] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -107,7 +124,7 @@ export function DataTable<T>({
 
     useEffect(() => {
         setPage(1);
-    }, [searchTerm, pageSize, filterValues]);
+    }, [searchTerm, pageSize, filterValues, extraParams]);
 
     const params = useMemo(() => {
         const baseParams: Record<string, any> = {
@@ -122,13 +139,16 @@ export function DataTable<T>({
                 baseParams[key] = value;
             }
         });
-        return { ...baseParams, ...(extraParams ?? {}) };
+        return {
+            ...baseParams,
+            filters: Object.entries(extraParams ?? {}).map(([key, value]) => ({
+                key,
+                value,
+            })),
+        };
     }, [page, pageSize, searchTerm, filterValues, extraParams]);
 
     useEffect(() => {
-        if (isClient) {
-            return;
-        }
         if (!url) {
             return;
         }
@@ -137,15 +157,17 @@ export function DataTable<T>({
             try {
                 setLoading(true);
                 setError(null);
-                const response = await api.get(url, { params });
-                const payload = transformResponse
-                    ? transformResponse(response.data)
-                    : extractRows<T>(response.data);
+                const response = await api().get(url, { params });
+                const payload = extractRows<T>(response.data);
                 if (!active) {
                     return;
                 }
                 setRows(payload.rows ?? []);
-                setMeta(payload.meta ?? null);
+                setMeta({
+                    total: payload.meta?.total ?? 0,
+                    page: payload.meta?.page ?? 1,
+                    perPage: payload.meta?.perPage ?? 0,
+                });
             } catch (err: any) {
                 if (!active) {
                     return;
@@ -163,121 +185,107 @@ export function DataTable<T>({
         return () => {
             active = false;
         };
-    }, [url, params, transformResponse, isClient]);
+    }, [url, params]);
 
-    const baseRows = useMemo(() => (isClient ? (data ?? []) : rows), [data, isClient, rows]);
-    const filteredRows = useMemo(() => {
-        let nextRows = baseRows;
-        Object.entries(filterValues).forEach(([key, value]) => {
-            if (value === undefined || value === null || value === '') {
-                return;
-            }
-            nextRows = nextRows.filter((row) => {
-                const raw = (row as any)?.[key];
-                if (Array.isArray(raw)) {
-                    return raw.map(String).includes(String(value));
-                }
-                return String(raw ?? '') === String(value);
-            });
-        });
-        if (!searchTerm) {
-            return nextRows;
-        }
-        const term = searchTerm.toLowerCase();
-        return nextRows.filter((row) => {
-            return columns.some((col) => {
-                const raw = col.accessor ? col.accessor(row) : (row as any)?.[col.key];
-                if (raw === null || raw === undefined) {
-                    return false;
-                }
-                if (Array.isArray(raw)) {
-                    return raw.map(String).join(' ').toLowerCase().includes(term);
-                }
-                return String(raw).toLowerCase().includes(term);
-            });
-        });
-    }, [baseRows, columns, filterValues, searchTerm]);
-
-    const pagedRows = useMemo(() => {
-        if (!isClient) {
-            return rows;
-        }
-        const start = (page - 1) * pageSize;
-        return filteredRows.slice(start, start + pageSize);
-    }, [filteredRows, isClient, page, pageSize, rows]);
-
-    const total = isClient ? filteredRows.length : meta?.total;
+    const total = meta?.total;
     const maxPage = total ? Math.max(1, Math.ceil(total / pageSize)) : null;
     const canPrev = page > 1 && !loading;
-    const canNext = !loading && (maxPage ? page < maxPage : pagedRows.length === pageSize);
+    const canNext = !loading && (maxPage ? page < maxPage : rows.length === pageSize);
 
-    const renderHeader = () => (
-        <View style={[theme.styles.row, theme.utils.pysm, theme.utils.pxsm, { borderBottomWidth: 1, borderBottomColor: theme.color.border }]}>
-            {columns.map((col) => (
-                <View
-                    key={col.key}
-                    style={{
-                        width: col.width,
-                        flex: col.flex ?? (col.width ? 0 : 1),
-                        paddingRight: 12,
-                        ...(col.headerStyle as object),
-                    }}>
-                    <Text style={[theme.typography.variants.caption, { color: theme.color.muted, textAlign: col.align ?? 'left' }, col.headerTextStyle]}>
-                        {col.title}
-                    </Text>
-                </View>
-            ))}
-        </View>
-    );
-
-    const renderRow = ({ item, index }: { item: T; index: number }) => (
-        <View
-            key={rowKey ? rowKey(item, index) : index}
-            style={[
-                theme.styles.row,
-                theme.utils.pysm,
-                theme.utils.pxsm,
-                { borderBottomWidth: 1, borderBottomColor: theme.color.border },
-            ]}
-            onTouchEnd={onRowPress ? () => onRowPress(item) : undefined}>
-            {columns.map((col) => {
-                const value = col.render ? col.render(item) : col.accessor ? col.accessor(item) : (item as any)?.[col.key];
-                return (
+    const renderHeader = () => {
+        if (!columns || !Array.isArray(columns) || columns.length === 0) {
+            return null;
+        }
+        return (
+            <View
+                style={[
+                    theme.styles.row,
+                    theme.utils.pysm,
+                    theme.utils.pxsm,
+                    {
+                        borderBottomWidth: 1,
+                        borderBottomColor: theme.color.border,
+                    },
+                ]}>
+                {columns.map((col) => (
                     <View
                         key={col.key}
                         style={{
                             width: col.width,
                             flex: col.flex ?? (col.width ? 0 : 1),
                             paddingRight: 12,
-                            ...(col.cellStyle as object),
+                            ...(col.headerStyle as object),
                         }}>
-                        {typeof value === 'string' || typeof value === 'number' || value === null || value === undefined ? (
-                            <Text style={[{ color: theme.color.text, textAlign: col.align ?? 'left' }, col.cellTextStyle]}>
-                                {value ?? '--'}
-                            </Text>
-                        ) : (
-                            <View>{value}</View>
-                        )}
+                        <Text
+                            style={[
+                                theme.typography.variants.caption,
+                                {
+                                    color: theme.color.muted,
+                                    textAlign: col.align ?? 'left',
+                                },
+                                col.headerTextStyle,
+                            ]}>
+                            {col.title}
+                        </Text>
                     </View>
-                );
-            })}
-        </View>
-    );
+                ))}
+            </View>
+        );
+    };
+
+    const defaultRenderRow = ({ item, index }: { item: T; index: number }) => {
+        if (!columns || !Array.isArray(columns) || columns.length === 0) {
+            return null;
+        }
+        return (
+            <DataTableRow
+                item={item}
+                index={index}
+                columns={columns}
+                theme={theme}
+                rowKey={rowKey}
+                onRowPress={onRowPress}
+                getRowStyle={getRowStyle}
+                getCellStyle={getCellStyle}
+                getCellTextStyle={getCellTextStyle} />
+        );
+    };
 
     return (
         <View style={[theme.styles.container, theme.styles.background]}>
-            <View style={[theme.utils.pxmd, theme.utils.ptsm]}>
-                <Text style={[theme.typography.variants.title, theme.utils.pbsm]}>{name}</Text>
-                {searchable ? (
-                    <FormInput
-                        theme={theme}
-                        placeholder={`Search${name ? ` ${name.toLowerCase()}` : ''}...`}
-                        value={searchInput}
-                        onChangeText={setSearchInput}
-                    />
+            <View>
+                {(searchable || filterButton) ? (
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'stretch',
+                            gap: 0,
+                            marginBottom: 12,
+                        }}>
+                        <View style={{ flex: 1 }}>
+                            {searchable ? (
+                                <FormInput
+                                    theme={theme}
+                                    placeholder="Search..."
+                                    value={searchInput}
+                                    onChangeText={setSearchInput}
+                                    hideDetails
+                                    inputContainerStyle={{
+                                        borderTopRightRadius: 0,
+                                        borderBottomRightRadius: 0,
+                                    }}
+                                />
+                            ) : null}
+                        </View>
+                        {filterButton ? (
+                            <View style={{ marginTop: -6 }}>
+                                {filterButton}
+                            </View>
+                        ) : null}
+                    </View>
                 ) : null}
                 {filters.length > 0 ? (
-                    <View style={[theme.styles.row, { gap: 12, flexWrap: 'wrap' }]}> 
+                    <View style={[theme.styles.row, { gap: 12, flexWrap: 'wrap' }]}>
                         {filters.map((filter) => (
                             <View key={filter.key} style={{ minWidth: 160, flex: 1 }}>
                                 <Dropdown
@@ -286,18 +294,20 @@ export function DataTable<T>({
                                     value={filterValues[filter.key]}
                                     placeholder={filter.placeholder ?? filter.label}
                                     onSelect={(val) => {
-                                        setFilterValues((prev) => ({ ...prev, [filter.key]: val }));
-                                    }}
-                                />
+                                        setFilterValues((prev) => ({
+                                            ...prev,
+                                            [filter.key]: val,
+                                        }));
+                                    }} />
                             </View>
                         ))}
                     </View>
                 ) : null}
             </View>
-
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={{ minWidth: '100%' }}>
-                    {renderHeader()}
+                    {showHeader ? renderHeader() : null}
+
                     {loading ? (
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
                             <Text style={{ color: theme.color.muted }}>Loading...</Text>
@@ -306,54 +316,75 @@ export function DataTable<T>({
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
                             <Text style={{ color: theme.color.danger }}>{error}</Text>
                         </View>
-                    ) : pagedRows.length === 0 ? (
+                    ) : rows.length === 0 ? (
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
-                            <Text style={{ color: theme.color.muted }}>No {name.toLowerCase()} found.</Text>
+                            <Text style={{ color: theme.color.muted }}>No results found.</Text>
                         </View>
                     ) : (
                         <FlatList
-                            data={pagedRows}
-                            keyExtractor={(item, index) => String(rowKey ? rowKey(item, index) : index)}
-                            renderItem={renderRow}
-                        />
+                            data={rows}
+                            keyExtractor={(item, index) =>
+                                String(rowKey ? rowKey(item, index) : index)
+                            }
+                            renderItem={({ item, index }) =>
+                                renderRow
+                                    ? renderRow({ item, index, setRows })
+                                    : defaultRenderRow({ item, index })
+                            } />
                     )}
                 </View>
             </ScrollView>
-
-            <View style={[theme.styles.row, theme.styles.rowSpaceBetween, theme.utils.pxmd, theme.utils.pymd]}>
-                <View style={[theme.styles.row, { gap: 8, alignItems: 'center' }]}> 
-                    <Text style={{ color: theme.color.muted }}>Rows</Text>
-                    <Dropdown
-                        theme={theme}
-                        value={pageSize}
-                        options={pageSizeOptions.map((size) => ({
-                            label: String(size),
-                            value: size,
-                        }))}
-                        onSelect={(val) => setPageSize(Number(val))}
-                        bordered
-                        fieldStyle={{ minWidth: 80 }}
-                    />
-                </View>
-                <View style={[theme.styles.row, { gap: 8, alignItems: 'center' }]}> 
-                    <Button
-                        title="Prev"
-                        variant="outline"
-                        size="sm"
-                        disabled={!canPrev}
-                        onPress={() => setPage((p) => Math.max(1, p - 1))}
-                    />
-                    <Text style={{ color: theme.color.muted }}>
-                        Page {page}{maxPage ? ` of ${maxPage}` : ''}
-                    </Text>
-                    <Button
-                        title="Next"
-                        variant="outline"
-                        size="sm"
-                        disabled={!canNext}
-                        onPress={() => setPage((p) => p + 1)}
-                    />
-                </View>
+            <View style={[theme.utils.ptmd]}>
+                <Dropdown
+                    theme={theme}
+                    value={pageSize}
+                    options={pageSizeOptions.map((size) => ({
+                        label: String(size),
+                        value: size,
+                    }))}
+                    onSelect={(val) => setPageSize(Number(val))}
+                    bordered />
+            </View>
+            <View
+                style={[
+                    theme.utils.ptmd,
+                    {
+                        flexDirection: 'row',
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    },
+                ]}>
+                <Button
+                    iconOnly
+                    disabled={!canPrev}
+                    onPress={() => setPage((p) => Math.max(1, p - 1))}
+                    left={
+                        <MaterialIcons
+                            name="chevron-left"
+                            size={20}
+                            color={canPrev ? theme.color.buttonTextColor : theme.color.muted} />
+                    } />
+                <Text
+                    style={{
+                        color: theme.color.muted,
+                        textAlign: 'center',
+                        minWidth: 80,
+                    }}>
+                    Page {page}
+                    {maxPage ? ` of ${maxPage}` : ''}
+                </Text>
+                <Button
+                    iconOnly
+                    disabled={!canNext}
+                    onPress={() => setPage((p) => Math.min(maxPage ?? p + 1, p + 1))}
+                    left={
+                        <MaterialIcons
+                            name="chevron-right"
+                            size={20}
+                            color={canNext ? theme.color.buttonTextColor : theme.color.muted} />
+                    }
+                />
             </View>
         </View>
     );

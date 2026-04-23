@@ -22,6 +22,16 @@ export const color = {
         link: '#0A66C2',
         buttonTextColor: '#F1F1F1',
         buttonTextColorInverse: '#1A1A1A',
+        buttonText: {
+            primary: '#FFFFFF',
+            secondary: '#FFFFFF',
+            accent: '#1A1A1A',
+            ternary: '#FFFFFF',
+            danger: '#FFFFFF',
+            success: '#FFFFFF',
+            info: '#FFFFFF',
+            warning: '#1A1A1A',
+        },
     },
     dark: {
         primary: '#F97316',
@@ -42,6 +52,16 @@ export const color = {
         link: '#64B5F6',
         buttonTextColor: '#1A1A1A',
         buttonTextColorInverse: '#F1F1F1',
+        buttonText: {
+            primary: '#1A1A1A',
+            secondary: '#FFFFFF',
+            accent: '#1A1A1A',
+            ternary: '#FFFFFF',
+            danger: '#FFFFFF',
+            success: '#1A1A1A',
+            info: '#1A1A1A',
+            warning: '#1A1A1A',
+        },
     },
 };
 

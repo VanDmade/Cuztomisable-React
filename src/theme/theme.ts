@@ -108,7 +108,7 @@ export const createTheme = (
         rowFlexStart: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' },
         rowJustifyContentCenter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
         rowSelected: {
-            backgroundColor: 'rgba(0,0,0,0.1)',
+            backgroundColor: 'rgba(0,0,0,0.25)',
         },
         rowLeft: {
             flexShrink: 1,

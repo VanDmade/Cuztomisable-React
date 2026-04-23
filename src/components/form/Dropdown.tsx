@@ -127,16 +127,18 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
                     ]}
                     onPress={open}
                     disabled={disabled}>
-                    <Text
-                        style={[
-                            { color: activeTheme.color.text },
-                            !selectedOption && activeTheme.typography.variants.placeholder,
-                            textStyle,
-                        ]}
-                        numberOfLines={1}>
-                        {selectedOption ? (selectedOption.selectedText ?? selectedOption.label) : placeholder}
-                    </Text>
-                    <Text style={[activeTheme.styles.chevron, textStyle]}>▼</Text>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                        <Text
+                            style={[
+                                { color: activeTheme.color.text, flex: 1 },
+                                !selectedOption && activeTheme.typography.variants.placeholder,
+                                textStyle,
+                            ]}
+                            numberOfLines={1}>
+                            {selectedOption ? (selectedOption.selectedText ?? selectedOption.label) : placeholder}
+                        </Text>
+                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8, flexShrink: 0 }]}>▼</Text>
+                    </View>
                 </TouchableOpacity>
             ) : null}
             <Modal visible={visible} transparent animationType="none" onRequestClose={close}>

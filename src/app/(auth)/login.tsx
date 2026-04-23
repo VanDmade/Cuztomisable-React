@@ -10,9 +10,8 @@ import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useConfig } from '../../providers/ConfigProvider';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
-export default function LoginScreen({ logoSource }: { logoSource?: any }) {
+export default function LoginScreen() {
     const theme = useTheme();
     const config = useConfig();
     const router = useRouter();
@@ -53,7 +52,7 @@ export default function LoginScreen({ logoSource }: { logoSource?: any }) {
                         theme={theme}
                         title="Login"
                         subtitle={`Welcome to ${config.appName ?? 'Cuztomisable'}!`}
-                        logoSource={logoSource || themeImages.logo} />
+                        logoSource={theme.image.logo} />
                     <View style={[theme.utils.mtlg, theme.utils.widthFull]}>
                         <FormInput
                             theme={theme}

@@ -8,9 +8,8 @@ import { useMessage } from '../../contexts/MessageContext';
 import { usePassword } from '../../contexts/PasswordContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
-export default function ForgotScreen({ logoSource }: { logoSource?: any }) {
+export default function ForgotScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { request } = usePassword();
@@ -39,7 +38,7 @@ export default function ForgotScreen({ logoSource }: { logoSource?: any }) {
                         theme={theme}
                         title="Forgot Password"
                         subtitle="Enter the email associated with your account"
-                        logoSource={logoSource || themeImages.logo} />
+                        logoSource={theme.image.logo} />
                     <View style={[theme.utils.mtlg, theme.utils.widthFull]}>
                         <FormInput
                             theme={theme}

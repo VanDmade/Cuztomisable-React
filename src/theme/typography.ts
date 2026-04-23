@@ -40,12 +40,10 @@ export const getTypography = (colors: Color) => {
             },
             body: {
                 fontSize: sizes.md,
-                fontWeight: weights.regular,
                 color: colors.text,
             },
             caption: {
                 fontSize: sizes.xs,
-                fontWeight: weights.regular,
                 color: colors.muted,
             },
             muted: {
