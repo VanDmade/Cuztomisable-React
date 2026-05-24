@@ -83,23 +83,27 @@ export const Footer: React.FC<Props> = ({
 		(leftItems.length > 0 || rightItems.length > 0 || showPlus ?
 			<View style={[theme.styles.positionRelative, { height: navHeight }]}>
 				{showNavDropdown && (
-					<Dropdown
-						ref={navDropdownRef}
-						theme={theme}
-						showField={false}
-						modalTitle={dropdownTitle}
-						options={dropdownOptions}
-						onSelect={(route) => go(route)} />
+					<View style={{ height: 0, overflow: 'hidden' }}>
+						<Dropdown
+							ref={navDropdownRef}
+							theme={theme}
+							showField={false}
+							modalTitle={dropdownTitle}
+							options={dropdownOptions}
+							onSelect={(route) => go(route)} />
+					</View>
 				)}
 				{showPlus && (
 					showPlusDropdown ? (
-						<Dropdown
-							ref={plusDropdownRef}
-							theme={theme}
-							showField={false}
-							modalTitle={plusTitle}
-							options={actions}
-							onSelect={(route) => go(route)} />
+						<View style={{ height: 0, overflow: 'hidden' }}>
+							<Dropdown
+								ref={plusDropdownRef}
+								theme={theme}
+								showField={false}
+								modalTitle={plusTitle}
+								options={actions}
+								onSelect={(route) => go(route)} />
+						</View>
 					) : null
 				)}
 				<View

@@ -1,6 +1,15 @@
 // src/components/form/Input.tsx
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Text, TextInput, TextInputProps, View } from 'react-native';
+import {
+    Animated,
+    StyleProp,
+    Text,
+    TextInput,
+    TextInputProps,
+    TextStyle,
+    View,
+    ViewStyle,
+} from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
 import { makeFormStyles } from './styles';
@@ -12,8 +21,11 @@ type FormInputProps = {
     disabled?: boolean;
     hideDetails?: boolean;
     capitalOnly?: boolean;
+    fontSize?: number;
     onChangeText?: (text: string) => void;
     onClearError?: () => void;
+    containerStyle?: StyleProp<ViewStyle>;
+    inputStyle?: StyleProp<TextStyle>;
 } & TextInputProps;
 
 export const FormInput: React.FC<FormInputProps> = ({
@@ -23,9 +35,12 @@ export const FormInput: React.FC<FormInputProps> = ({
     disabled = false,
     hideDetails = false,
     capitalOnly = false,
+    fontSize,
     onChangeText,
     onClearError,
     style,
+    containerStyle,
+    inputStyle,
     ...inputProps
 }) => {
     const activeTheme = theme ?? useTheme();
@@ -48,27 +63,30 @@ export const FormInput: React.FC<FormInputProps> = ({
     };
 
     return (
-        <View style={formStyles.wrapper}>
-            {label && (
-                <Text style={formStyles.label}>
-                    {label}
-                </Text>
-            )}
+        <View style={[formStyles.wrapper, containerStyle]}>
+            {label && <Text style={formStyles.label}>{label}</Text>}
+
             <TextInput
                 {...inputProps}
-                autoCapitalize = {capitalOnly ? "characters" : "none"}
+                autoCapitalize={capitalOnly ? 'characters' : 'none'}
                 editable={!disabled}
                 style={[
                     formStyles.input,
                     disabled && formStyles.inputDisabled,
                     error && formStyles.errorBorder,
+                    fontSize ? { fontSize } : null,
                     style,
+                    inputStyle,
                 ]}
                 placeholderTextColor={activeTheme.color.muted}
-                onChangeText={handleChangeText} />
+                onChangeText={handleChangeText}
+            />
+
             {!hideDetails && (
                 <Animated.View style={[formStyles.errorContainer, { opacity: fadeAnim }]}>
-                    <Text style={activeTheme.typography.variants.error}>{error || ' '}</Text>
+                    <Text style={activeTheme.typography.variants.error}>
+                        {error || ' '}
+                    </Text>
                 </Animated.View>
             )}
         </View>

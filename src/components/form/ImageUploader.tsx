@@ -1,241 +1,259 @@
 // src/components/form/ImageUploader.tsx
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useCallback, useMemo } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useRef } from 'react';
+import {
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
+
 import { useTheme } from '../../providers/ThemeProvider';
-import { makeFormStyles } from './styles';
+
+type ImageItem = {
+    id: number;
+    uri: string;
+};
 
 type Props = {
-    theme?: ReturnType<typeof import('../../theme/theme').createTheme>;
-    value?: string | string[] | null;
-    onChange: (uri: string | string[] | null) => void;
-    size?: number;
-    circle?: boolean;
-    square?: boolean;
-    label?: string;
+    value?: string | string[] | ImageItem[] | null;
+    onChange: (val: any) => void;
+
     multiple?: boolean;
     maxSelections?: number;
-    allowCamera?: boolean;
-    thumbnail?: string | null;
-    onThumbnailChange?: (uri: string | null) => void;
+
+    thumbnailImage?: number | null;
+    onThumbnailChange?: (id: number) => void;
+
     defaultImageSource?: any;
 };
 
-export const ImageUploader: React.FC<Props & { defaultImageSource: any }> = ({
-    theme,
+export const ImageUploader: React.FC<Props> = ({
     value,
     onChange,
-    size = 120,
-    circle = true,
-    square = true,
-    label = null,
     multiple = false,
-    maxSelections,
-    allowCamera = true,
-    thumbnail = null,
+    maxSelections = 4,
+    thumbnailImage,
     onThumbnailChange,
     defaultImageSource,
 }) => {
-    const activeTheme = theme ?? useTheme();
-    const formStyles = useMemo(() => makeFormStyles(activeTheme), [activeTheme]);
-    const defaultImage = defaultImageSource;
-    const valueList = useMemo(() => {
-        if (!value) {
-            return [] as string[];
-        }
-        return Array.isArray(value) ? value : [value];
+    const theme = useTheme();
+    const scrollRef = useRef<ScrollView>(null);
+
+    const isObjectMode = useMemo(() => {
+        return Array.isArray(value) && value.length > 0 && typeof value[0] === 'object';
     }, [value]);
-    const isMulti = multiple || Array.isArray(value);
-    const effectiveThumbnail = thumbnail ?? (valueList[0] ?? null);
-    const askForPermission = useCallback(async () => {
+
+    const list: ImageItem[] = useMemo(() => {
+        if (!value) return [];
+
+        if (isObjectMode) return value as ImageItem[];
+
+        if (Array.isArray(value)) {
+            return value.map((uri, i) => ({
+                id: i,
+                uri,
+            }));
+        }
+
+        return [{ id: 0, uri: value }];
+    }, [value]);
+
+    const askPermission = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert('Permission required', 'We need access to your photos so you can upload a profile image.');
+            Alert.alert('Permission required');
             return false;
         }
         return true;
-    }, []);
+    };
 
-    const handleRemoveImage = useCallback(async () => {
-        onChange(null);
-    }, [onChange]);
+    const handlePick = useCallback(async () => {
+        const ok = await askPermission();
+        if (!ok) return;
 
-    const handleRemoveAt = useCallback((uri: string) => {
-        const next = valueList.filter((item) => item !== uri);
-        onChange(isMulti ? next : (next[0] ?? null));
-        if (effectiveThumbnail === uri) {
-            onThumbnailChange?.(next[0] ?? null);
-        }
-    }, [valueList, onChange, isMulti, effectiveThumbnail, onThumbnailChange]);
-
-    const handlePickImage = useCallback(async () => {
-        const ok = await askForPermission();
-        if (!ok) {
-            return;
-        }
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            quality: 0.9,
-            ...(square ? { aspect: [1, 1] } : {}),
-            ...(isMulti ? { allowsMultipleSelection: true } : {}),
-            ...(isMulti && maxSelections ? { selectionLimit: maxSelections } : {}),
+            mediaTypes: ['images'],
+            allowsMultipleSelection: multiple,
+            selectionLimit: maxSelections,
         });
+
         if (!result.canceled) {
-            const uris = result.assets.map((asset) => asset.uri).filter(Boolean);
-            if (isMulti) {
-                const combined = [...valueList, ...uris].filter((item, idx, arr) => arr.indexOf(item) === idx);
-                onChange(combined);
-                if (!effectiveThumbnail && combined[0]) {
-                    onThumbnailChange?.(combined[0]);
+            const assets = result.assets.map((a) => ({
+                id: Date.now() + Math.random(),
+                uri: a.uri,
+            }));
+
+            if (multiple) {
+                let next = [...list, ...assets];
+
+                if (maxSelections) {
+                    next = next.slice(0, maxSelections);
                 }
+
+                onChange(isObjectMode ? next : next.map((i) => i.uri));
             } else {
-                const uri = uris[0] ?? null;
+                const uri = assets[0]?.uri;
                 onChange(uri);
             }
         }
-    }, [askForPermission, onChange, square, isMulti, valueList, maxSelections, effectiveThumbnail, onThumbnailChange]);
+    }, [multiple, list, onChange, maxSelections, isObjectMode]);
 
-    const handleTakePhoto = useCallback(async () => {
-        if (!allowCamera) {
-            return;
-        }
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission required', 'We need camera access so you can take a profile photo.');
-            return;
-        }
-        const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            quality: 0.9,
-            ...(square ? { aspect: [1, 1] } : {}),
-        });
-        if (!result.canceled) {
-            const uri = result.assets[0]?.uri ?? null;
-            if (isMulti && uri) {
-                const combined = [...valueList, uri].filter((item, idx, arr) => arr.indexOf(item) === idx);
-                onChange(combined);
-                if (!effectiveThumbnail && combined[0]) {
-                    onThumbnailChange?.(combined[0]);
-                }
-            } else {
-                onChange(uri);
-            }
-        }
-    }, [onChange, allowCamera, square, isMulti, valueList, effectiveThumbnail, onThumbnailChange]);
+    const handleRemove = (id: number) => {
+        const next = list.filter((i) => i.id !== id);
 
-    return (
-        <View style={[activeTheme.styles.alignCenter]}>
-            {isMulti ? (
-                <View style={styles.grid}>
-                    {valueList.length === 0 ? (
+        if (multiple) {
+            onChange(isObjectMode ? next : next.map((i) => i.uri));
+        } else {
+            onChange(null);
+        }
+
+        if (thumbnailImage === id) {
+            onThumbnailChange?.(next[0]?.id ?? 0);
+        }
+    };
+
+    const canAddMore = !maxSelections || list.length < maxSelections;
+
+    if (!multiple) {
+        const uri = list[0]?.uri;
+
+        return (
+            <View style={styles.singleWrapper}>
+                <View style={styles.singleContainer}>
+                    <Pressable onPress={handlePick}>
                         <Image
-                            source={defaultImage}
-                            style={{
-                                width: size,
-                                height: size,
-                                borderRadius: circle ? (size / 2) : 8,
-                                borderWidth: 1,
-                                borderColor: activeTheme.color.border,
-                            }} />
-                    ) : (
-                        valueList.map((uri) => (
-                            <View key={uri} style={styles.gridItem}>
-                                <Image
-                                    source={{ uri }}
-                                    style={{
-                                        width: size,
-                                        height: size,
-                                        borderRadius: circle ? (size / 2) : 8,
-                                        borderWidth: 1,
-                                        borderColor: activeTheme.color.border,
-                                    }} />
-                                <Pressable
-                                    onPress={() => handleRemoveAt(uri)}
-                                    style={[{
-                                        position: 'absolute',
-                                        top: 2,
-                                        right: 2,
-                                        backgroundColor: activeTheme.color.primary,
-                                    }, activeTheme.utils.circle28, activeTheme.styles.alignCenter, activeTheme.styles.justifyCenter]}>
-                                    <Text style={{ color: 'white', fontSize: 18, lineHeight: 18 }}>×</Text>
-                                </Pressable>
-                                {onThumbnailChange ? (
-                                    <Pressable
-                                        onPress={() => onThumbnailChange(uri)}
-                                        style={[styles.thumbBadge, { backgroundColor: activeTheme.color.primary }]}
-                                    >
-                                        <Text style={styles.thumbBadgeText}>
-                                            {effectiveThumbnail === uri ? 'Thumbnail' : 'Set Thumbnail'}
-                                        </Text>
-                                    </Pressable>
-                                ) : null}
-                            </View>
-                        ))
-                    )}
-                </View>
-            ) : (
-                <View>
-                    <Image
-                        source={valueList[0] ? { uri: valueList[0] } : defaultImage}
-                        style={{
-                            width: size,
-                            height: size,
-                            borderRadius: circle ? (size / 2) : 0,
-                            borderWidth: 1,
-                            borderColor: activeTheme.color.border,
-                        }} />
-                    {valueList[0] && (
+                            source={
+                                uri
+                                    ? { uri }
+                                    : defaultImageSource
+                            }
+                            style={styles.singleImage} />
+                    </Pressable>
+                    {uri && (
                         <Pressable
-                            onPress={handleRemoveImage}
-                            style={[{
-                                position: 'absolute',
-                                top: 2,
-                                right: 2,
-                                backgroundColor: activeTheme.color.primary,
-                            }, activeTheme.utils.circle28, activeTheme.styles.alignCenter, activeTheme.styles.justifyCenter]}>
-                            <Text style={{ color: 'white', fontSize: 18, lineHeight: 18 }}>×</Text>
+                            onPress={() => handleRemove(0)}
+                            style={styles.remove}>
+                            <MaterialIcons name="close" size={14} color="white" />
                         </Pressable>
                     )}
                 </View>
-            )}
-            <View style={[activeTheme.utils.mtsm, styles.actionRow]}>
-                <Pressable onPress={handlePickImage}><Text style={[activeTheme.typography.variants.link]}>Select From Gallery</Text></Pressable>
-                {allowCamera ? (
-                    <Pressable onPress={handleTakePhoto}><Text style={[activeTheme.typography.variants.link]}>Take Photo</Text></Pressable>
-                ) : null}
             </View>
-            {label ? (<Text style={[activeTheme.utils.mtsm, formStyles.helper]}>{label}</Text>) : null}
+        );
+    }
+    return (
+        <View>
+            <View style={styles.row}>
+                <Pressable onPress={() => scrollRef.current?.scrollTo({ x: 0 })}>
+                    <Text>{'‹'}</Text>
+                </Pressable>
+                <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.list}>
+                    {list.map((item) => {
+                        const isThumb = thumbnailImage === item.id;
+                        return (
+                            <Pressable
+                                key={item.id}
+                                onPress={() => onThumbnailChange?.(item.id)}
+                                style={[
+                                    styles.imageContainer,
+                                    isThumb && { borderColor: theme.color.primary, borderWidth: 2 },
+                                ]}>
+                                <Image
+                                    source={{ uri: item.uri }}
+                                    style={styles.image} />
+                                <Pressable
+                                    onPress={() => handleRemove(item.id)}
+                                    style={styles.remove}>
+                                    <MaterialIcons name="close" size={14} color="white" />
+                                </Pressable>
+                            </Pressable>
+                        );
+                    })}
+                    {canAddMore && (
+                        <Pressable
+                            onPress={handlePick}
+                            style={[styles.add, { backgroundColor: theme.color.primary }]}>
+                            <MaterialIcons
+                                name="add"
+                                size={28}
+                                color={theme.color.buttonText.primary}
+                            />
+                        </Pressable>
+                    )}
+                </ScrollView>
+                <Pressable onPress={() => scrollRef.current?.scrollToEnd()}>
+                    <Text>{'›'}</Text>
+                </Pressable>
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    actionRow: {
-        flexDirection: 'row',
-        gap: 12,
+    singleContainer: {
+        position: 'relative',
     },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-    },
-    gridItem: {
-        margin: 6,
-    },
-    thumbBadge: {
-        position: 'absolute',
-        bottom: 6,
-        left: 6,
-        right: 6,
-        paddingVertical: 4,
-        paddingHorizontal: 6,
-        borderRadius: 10,
+    singleWrapper: {
         alignItems: 'center',
     },
-    thumbBadgeText: {
-        color: 'white',
+    singleImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    list: {
+        flexDirection: 'row',
+        paddingVertical: 10,
+    },
+    imageContainer: {
+        marginRight: 10,
+        borderWidth: 2,
+        borderRadius: 10,
+    },
+    image: {
+        width: 90,
+        height: 90,
+        borderRadius: 8,
+    },
+    remove: {
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 22,
+        height: 22,
+        borderRadius: 11, // 👈 makes it circular
+        backgroundColor: 'rgba(0,0,0,0.65)', // 👈 black with opacity
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    badge: {
+        position: 'absolute',
+        bottom: 4,
+        left: 4,
+        right: 4,
+        alignItems: 'center',
+    },
+    badgeText: {
         fontSize: 10,
-        fontWeight: '600',
+        color: 'white',
+    },
+    add: {
+        width: 92,
+        height: 92,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 8,
     },
 });

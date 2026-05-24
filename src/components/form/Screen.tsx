@@ -43,7 +43,7 @@ export function FormScreen({
         return () => { s.remove(); h.remove(); };
     }, []);
 
-    const bottomPadding = (height > 0 ? height : 0) + TOOLBAR_HEIGHT + insets.bottom;
+    const bottomPadding = (height > 0 ? height : 0) + insets.bottom;
 
     return (
         <View style={{ flex: 1, backgroundColor: effectiveBackgroundColor }}>

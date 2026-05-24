@@ -65,7 +65,7 @@ export const defaultConfig = {
     navigation: {
         items: [
             { key: 'drinks', route: '/(tabs)/drinks', icon: 'glass-cocktail', position: 'left' },
-            { key: 'ingredients', route: '/(tabs)/ingredients', icon: 'food-apple-outline', position: 'left' },
+            { key: 'ingredients', route: '/(tabs)/ingredients', icon: 'bookmark-outline', position: 'left' },
             { key: 'shopping', route: '/(tabs)/shopping-list', icon: 'clipboard-list-outline', position: 'right' },
             { key: 'bar-management', route: '/(tabs)/bar-management', icon: 'glass-wine', position: 'right' },
         ],

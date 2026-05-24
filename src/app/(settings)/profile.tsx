@@ -59,7 +59,7 @@ export default function ProfileScreen({ defaultImageSource }: { defaultImageSour
     };
     const timezoneOptions = buildTimeZoneOptions();
     return (
-        <FormScreen paddingTop="20">
+        <FormScreen paddingTop={20}>
             {() => (
                 <View style={[theme.styles.container, theme.styles.background, theme.utils.pxmd]}>
                     <View style={[theme.styles.alignSelfCenter, theme.utils.mblg]}>

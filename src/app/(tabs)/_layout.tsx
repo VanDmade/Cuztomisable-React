@@ -16,6 +16,7 @@ export default function TabLayout() {
                         headerShown: false,
                         animation: 'fade',
                         animationDuration: 250,
+                        contentStyle: { backgroundColor: theme.color.background },
                     }}/>
             </View>
         </View>

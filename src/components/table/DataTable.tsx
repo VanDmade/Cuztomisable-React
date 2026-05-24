@@ -1,7 +1,7 @@
 // src/components/table/DataTable.tsx
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, ScrollView, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { FlatList, ScrollView, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 import { getApi as api } from '../../api/api';
 import { Dropdown, type DropdownOption } from '../../components/form/Dropdown';
@@ -116,6 +116,7 @@ export function DataTable<T>({
         }, {} as Record<string, string | number | undefined>);
     });
     const [meta, setMeta] = useState<PaginationMeta | null>(null);
+    const [pageInput, setPageInput] = useState(String(page));
 
     useEffect(() => {
         const id = setTimeout(() => setSearchTerm(searchInput.trim()), 350);
@@ -124,7 +125,12 @@ export function DataTable<T>({
 
     useEffect(() => {
         setPage(1);
+        setPageInput('1');
     }, [searchTerm, pageSize, filterValues, extraParams]);
+
+    useEffect(() => {
+        setPageInput(String(page));
+    }, [page]);
 
     const params = useMemo(() => {
         const baseParams: Record<string, any> = {
@@ -270,6 +276,8 @@ export function DataTable<T>({
                                     value={searchInput}
                                     onChangeText={setSearchInput}
                                     hideDetails
+                                    fontSize={18}
+                                    style={[filterButton ? { borderTopRightRadius: 0, borderBottomRightRadius: 0 } : null]}
                                     inputContainerStyle={{
                                         borderTopRightRadius: 0,
                                         borderBottomRightRadius: 0,
@@ -277,11 +285,7 @@ export function DataTable<T>({
                                 />
                             ) : null}
                         </View>
-                        {filterButton ? (
-                            <View style={{ marginTop: -6 }}>
-                                {filterButton}
-                            </View>
-                        ) : null}
+                        {filterButton ? (<View>{filterButton}</View>) : null}
                     </View>
                 ) : null}
                 {filters.length > 0 ? (
@@ -365,15 +369,37 @@ export function DataTable<T>({
                             size={20}
                             color={canPrev ? theme.color.buttonTextColor : theme.color.muted} />
                     } />
-                <Text
-                    style={{
-                        color: theme.color.muted,
-                        textAlign: 'center',
-                        minWidth: 80,
-                    }}>
-                    Page {page}
-                    {maxPage ? ` of ${maxPage}` : ''}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ color: theme.color.muted, fontSize: 21 }}>Page</Text>
+                    <TextInput
+                        value={pageInput}
+                        onChangeText={setPageInput}
+                        onBlur={() => {
+                            const parsed = parseInt(pageInput, 10);
+                            if (!isNaN(parsed)) {
+                                const clamped = Math.max(1, Math.min(parsed, maxPage ?? parsed));
+                                setPage(clamped);
+                                setPageInput(String(clamped));
+                            } else {
+                                setPageInput(String(page));
+                            }
+                        }}
+                        keyboardType="number-pad"
+                        selectTextOnFocus
+                        style={{
+                            color: theme.color.text,
+                            fontSize: 21,
+                            fontWeight: '600',
+                            borderBottomWidth: 1,
+                            borderBottomColor: theme.color.border,
+                            minWidth: 32,
+                            textAlign: 'center',
+                            paddingVertical: 2,
+                        }} />
+                    {maxPage ? (
+                        <Text style={{ color: theme.color.muted, fontSize: 21 }}>of {maxPage}</Text>
+                    ) : null}
+                </View>
                 <Button
                     iconOnly
                     disabled={!canNext}
@@ -383,8 +409,7 @@ export function DataTable<T>({
                             name="chevron-right"
                             size={20}
                             color={canNext ? theme.color.buttonTextColor : theme.color.muted} />
-                    }
-                />
+                    } />
             </View>
         </View>
     );

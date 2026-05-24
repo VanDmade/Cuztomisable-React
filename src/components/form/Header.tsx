@@ -1,6 +1,7 @@
 // src/components/form/Header.tsx
 import React from 'react';
 import { Image, ImageSourcePropType, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { useTheme } from '../../providers/ThemeProvider';
 
 type Props = {
     theme: ReturnType<typeof import('../../theme/theme').createTheme>;
@@ -17,8 +18,9 @@ export const FormHeader: React.FC<Props> = ({
     logoSource,
     containerStyle,
 }) => {
+    const activeTheme = theme ?? useTheme();
     return (
-        <View style={[styles.headerRow, theme.utils.mbsm, containerStyle]}>
+        <View style={[styles.headerRow, activeTheme.utils.mbsm, containerStyle]}>
             {logoSource && (
                 <Image
                     source={logoSource}
@@ -26,9 +28,9 @@ export const FormHeader: React.FC<Props> = ({
                     resizeMode="contain" />
             )}
             <View style={styles.headerTextWrapper}>
-                <Text style={theme.typography.variants.title}>{title}</Text>
+                <Text style={activeTheme.typography.variants.title}>{title}</Text>
                 {subtitle ? (
-                    <Text style={theme.typography.variants.subtitle}>{subtitle}</Text>
+                    <Text style={activeTheme.typography.variants.subtitle}>{subtitle}</Text>
                 ) : null}
             </View>
         </View>

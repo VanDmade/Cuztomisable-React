@@ -25,6 +25,7 @@ export type MultiSelectHandle = {
 
 type MultiSelectProps<T = any> = {
     theme?: Theme;
+    label?: string;
     value: T[];
     onChange: (val: T[]) => void;
     options: DropdownOption<T>[];
@@ -43,6 +44,7 @@ type MultiSelectProps<T = any> = {
 
 export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>({
     theme,
+    label,
     value,
     onChange,
     options,
@@ -121,7 +123,12 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
     const selectedOptions = options.filter((opt) => value.some((v) => v === opt.value));
     const atLeastOneSelected = value.length > 0;
     return (
-        <>
+        <View style={formStyles.wrapper}>
+            {label && (
+                <Text style={formStyles.label}>
+                    {label}
+                </Text>
+            )}
             {showField ? (
                 <TouchableOpacity
                     style={[
@@ -228,7 +235,7 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                         }} />
                 </Animated.View>
             </Modal>
-        </>
+        </View>
     );
 }) as <T = any>(p: MultiSelectProps<T> & { ref?: React.Ref<MultiSelectHandle> }) => React.ReactElement;
 

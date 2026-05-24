@@ -7,4 +7,5 @@ export * from './utils';
 
 export { AppProvider } from './providers/AppProvider';
 export { ThemeWrapper } from './providers/ThemeWrapper';
+export { useTheme } from './providers/ThemeProvider';
 

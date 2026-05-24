@@ -9,6 +9,7 @@ import {
     View,
     ViewStyle,
 } from 'react-native';
+
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 export type PillTableRowProps<T> = {
@@ -19,7 +20,6 @@ export type PillTableRowProps<T> = {
     rowKey?: (row: T, index: number) => string | number;
     onRowPress?: (row: T) => void;
 
-    // 👇 NEW: fully customizable swipe actions
     renderLeftActions?: (
         progress: Animated.AnimatedInterpolation<number>,
         item: T
@@ -29,14 +29,10 @@ export type PillTableRowProps<T> = {
         progress: Animated.AnimatedInterpolation<number>,
         item: T
     ) => React.ReactNode;
-
-    // 👇 Display helpers
     getImageSource?: (row: T) => string | undefined;
     getTitle?: (row: T) => string;
     getSubtitle?: (row: T) => string | undefined;
     getInfo?: (row: T) => React.ReactNode;
-
-    // 👇 Style overrides
     pillStyle?: ViewStyle;
     imageStyle?: ImageStyle;
     titleStyle?: TextStyle;
@@ -67,7 +63,17 @@ export function PillTableRow<T>({
     const subtitle = getSubtitle ? getSubtitle(item) : undefined;
 
     const [isSwiping, setIsSwiping] = useState(false);
+    const [anySwipeOpen, setAnySwipeOpen] = useState(false);
     const swipeRef = useRef<Swipeable>(null);
+    const titleShift = useRef(new Animated.Value(0)).current;
+
+    const springTitle = (toValue: number) =>
+        Animated.spring(titleShift, {
+            toValue,
+            useNativeDriver: true,
+            tension: 120,
+            friction: 10,
+        }).start();
 
     return (
         <Swipeable
@@ -87,12 +93,16 @@ export function PillTableRow<T>({
             friction={1.5}
             leftThreshold={24}
             rightThreshold={24}
-            dragOffsetFromLeftEdge={10}
-            dragOffsetFromRightEdge={10}
             enableTrackpadTwoFingerGesture
-            onSwipeableWillOpen={() => setIsSwiping(true)}
-            onSwipeableWillClose={() => setIsSwiping(false)}
-        >
+            activeOffsetX={[-10, 10]}
+            failOffsetY={[-10, 10]}
+            onSwipeableWillOpen={(direction) => {
+                setAnySwipeOpen(true);
+                const isDelete = direction === 'right';
+                setIsSwiping(isDelete);
+                if (isDelete) springTitle(75);
+            }}
+            onSwipeableWillClose={() => { setAnySwipeOpen(false); setIsSwiping(false); springTitle(0); }}>
             <RowComponent
                 delayPressIn={150}
                 key={rowKey ? rowKey(item, index) : index}
@@ -101,10 +111,10 @@ export function PillTableRow<T>({
                         flexDirection: 'row',
                         alignItems: 'center',
                         backgroundColor: theme.color.surface,
-                        borderTopRightRadius: isSwiping ? 0 : 12,
-                        borderBottomRightRadius: isSwiping ? 0 : 12,
-                        borderTopLeftRadius: isSwiping ? 0 : 12,
-                        borderBottomLeftRadius: isSwiping ? 0 : 12,
+                        borderTopRightRadius: anySwipeOpen ? 0 : 12,
+                        borderBottomRightRadius: anySwipeOpen ? 0 : 12,
+                        borderTopLeftRadius: anySwipeOpen ? 0 : 12,
+                        borderBottomLeftRadius: anySwipeOpen ? 0 : 12,
                         borderWidth: 1,
                         borderColor: theme.color.border,
                         paddingVertical: 12,
@@ -113,8 +123,7 @@ export function PillTableRow<T>({
                     },
                     pillStyle,
                 ]}
-                onPress={onRowPress ? () => onRowPress(item) : undefined}
-            >
+                onPress={onRowPress ? () => onRowPress(item) : undefined}>
                 {imageSrc && (
                     <Image
                         source={
@@ -130,42 +139,42 @@ export function PillTableRow<T>({
                                 marginRight: 16,
                             },
                             imageStyle,
-                        ]}
-                    />
+                        ]}/>
                 )}
-
                 <View style={{ flex: 1 }}>
-                    <Text
-                        style={[
-                            {
-                                fontSize: 18,
-                                fontWeight: '600',
-                                color: theme.color.text,
-                            },
-                            titleStyle,
-                        ]}
-                        numberOfLines={1}
-                    >
-                        {title}
-                    </Text>
-
-                    {subtitle && (
-                        <Text
-                            style={[
-                                {
-                                    fontSize: 14,
-                                    color: theme.color.muted,
-                                },
-                                subtitleStyle,
-                            ]}
-                            numberOfLines={1}
-                        >
-                            {subtitle}
-                        </Text>
-                    )}
+                    <Animated.View style={{ transform: [{ translateX: titleShift }] }}>
+                        {typeof title === 'string' ? (
+                            <Text
+                                style={[
+                                    {
+                                        fontSize: 18,
+                                        fontWeight: '600',
+                                        color: theme.color.text,
+                                    },
+                                    titleStyle,
+                                ]}
+                                numberOfLines={1}>
+                                {title}
+                            </Text>
+                        ) : (
+                            title
+                        )}
+                        {subtitle && (
+                            <Text
+                                style={[
+                                    {
+                                        fontSize: 14,
+                                        color: theme.color.muted,
+                                    },
+                                    subtitleStyle,
+                                ]}
+                                numberOfLines={1}>
+                                {subtitle}
+                            </Text>
+                        )}
+                    </Animated.View>
                 </View>
-
-                {getInfo && (
+                {getInfo && !isSwiping && !anySwipeOpen && (
                     <View style={{ marginLeft: 16 }}>
                         {getInfo(item)}
                     </View>

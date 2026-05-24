@@ -33,6 +33,10 @@
   },
   "exports": {
     ".": "./dist/index.js",
-    "./app/*": "./dist/app/*"
+    "./app/*": "./dist/app/*",
+    "./src/*": "./src/*"
+  },
+  "dependencies": {
+    "expo-haptics": "~55.0.14"
   }
 }

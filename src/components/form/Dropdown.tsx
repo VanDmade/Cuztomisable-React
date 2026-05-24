@@ -32,6 +32,7 @@ export type DropdownHandle = {
 
 type DropdownProps<T = any> = {
     theme?: Theme;
+    label?: string;
     value?: T;
     onSelect: (val: T) => void;
     options: DropdownOption<T>[];
@@ -49,6 +50,7 @@ type DropdownProps<T = any> = {
 export const Dropdown = forwardRef(function DropdownInner<T = any>(
     {
         theme,
+        label,
         value,
         onSelect,
         options,
@@ -114,7 +116,12 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
     const selectedOption = options.find(opt => opt?.value === value);
 
     return (
-        <>
+        <View style={formStyles.wrapper}>
+            {label && (
+                <Text style={formStyles.label}>
+                    {label}
+                </Text>
+            )}
             {showField ? (
                 <TouchableOpacity
                     style={[
@@ -187,7 +194,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
                         )} />
                 </Animated.View>
             </Modal>
-        </>
+        </View>
     );
 }) as <T = any>(p: DropdownProps<T> & { ref?: React.Ref<DropdownHandle> }) => React.ReactElement;
 

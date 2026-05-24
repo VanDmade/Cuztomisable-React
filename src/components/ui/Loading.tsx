@@ -1,5 +1,3 @@
-// src/components/ui/Loading.tsx
-
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text } from 'react-native';
 
@@ -9,7 +7,13 @@ export const Loading: React.FC<{
     text?: string;
     fadeOut?: boolean;
     loadingImageSource?: any;
-}> = ({ text, fadeOut = false, loadingImageSource }) => {
+    fullScreen?: boolean;
+}> = ({
+    text,
+    fadeOut = false,
+    loadingImageSource,
+    fullScreen = false,
+}) => {
     const { color, styles, utils, typography } = useTheme();
 
     const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -57,8 +61,8 @@ export const Loading: React.FC<{
                     flex: 1,
                     opacity: fadeAnim,
                 },
-            ]}
-        >
+                fullScreen && localStyles.loadingOverlay,
+            ]}>
             <Animated.Image
                 source={loadingImageSource}
                 style={[
@@ -70,9 +74,7 @@ export const Loading: React.FC<{
                         transform: [{ rotate: spinInterpolate }],
                     },
                 ]}
-                resizeMode="contain"
-            />
-
+                resizeMode="contain" />
             {text && (
                 <Text style={[styles.textCenter, typography.variants.body]}>
                     {text}
@@ -86,5 +88,10 @@ const localStyles = StyleSheet.create({
     cog: {
         width: 176,
         height: 176,
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFill,
+        zIndex: 999,
+        elevation: 999,
     },
 });
