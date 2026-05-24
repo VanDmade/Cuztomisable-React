@@ -19,7 +19,7 @@ npm install cuztomisable
 You can override any part of the theme (colors, images, layout/spacing, typography) without modifying the package source. Use the `createTheme` function and pass an `overrides` object:
 
 ```ts
-import { createTheme } from 'package/cuztomisable/src/theme/theme';
+import { createTheme } from 'packages/cuztomisable/src/theme/theme';
 
 const customTheme = createTheme('light', {
   color: {
@@ -61,7 +61,7 @@ This package requires a `theme/images.ts` file at the root of your app (not insi
 
 ```ts
 // theme/images.ts
-import { images as baseImages } from '../package/cuztomisable/src/theme/images';
+import { images as baseImages } from '../packages/cuztomisable/src/theme/images';
 
 export const images = {
   ...baseImages,
