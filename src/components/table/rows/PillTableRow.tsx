@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
-    Image,
+    Easing,
     ImageStyle,
     Text,
     TextStyle,
@@ -37,6 +37,11 @@ export type PillTableRowProps<T> = {
     imageStyle?: ImageStyle;
     titleStyle?: TextStyle;
     subtitleStyle?: TextStyle;
+    leftActionsOffset?: number;
+    rightActionsOffset?: number;
+    flashColor?: string;
+    flashTrigger?: number;
+    closeTrigger?: number;
 };
 
 export function PillTableRow<T>({
@@ -55,6 +60,11 @@ export function PillTableRow<T>({
     imageStyle,
     titleStyle,
     subtitleStyle,
+    leftActionsOffset = 75,
+    rightActionsOffset = 0,
+    flashColor,
+    flashTrigger,
+    closeTrigger,
 }: PillTableRowProps<T>) {
     const RowComponent = onRowPress ? TouchableOpacity : View;
 
@@ -66,16 +76,67 @@ export function PillTableRow<T>({
     const [anySwipeOpen, setAnySwipeOpen] = useState(false);
     const swipeRef = useRef<Swipeable>(null);
     const titleShift = useRef(new Animated.Value(0)).current;
+    const imageOpacity = useRef(new Animated.Value(1)).current;
+
+    const flashOpacity = useRef(new Animated.Value(0)).current;
+    const [activeFlashColor, setActiveFlashColor] = useState('transparent');
+
+    const enterY = useRef(new Animated.Value(-20)).current;
+    const enterOpacity = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const delay = Math.min(index, 8) * 60;
+        Animated.parallel([
+            Animated.timing(enterY, {
+                toValue: 0,
+                duration: 320,
+                delay,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+            Animated.timing(enterOpacity, {
+                toValue: 1,
+                duration: 280,
+                delay,
+                easing: Easing.out(Easing.ease),
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const runFlash = (color: string, intensity: number, inMs: number, outMs: number) => {
+        setActiveFlashColor(color);
+        flashOpacity.setValue(0);
+        Animated.sequence([
+            Animated.timing(flashOpacity, { toValue: intensity, duration: inMs, useNativeDriver: true }),
+            Animated.timing(flashOpacity, { toValue: 0, duration: outMs, useNativeDriver: true }),
+        ]).start();
+    };
+
+    const isMounted = useRef(false);
+    useEffect(() => {
+        if (!isMounted.current) { isMounted.current = true; return; }
+        if (!flashTrigger || !flashColor) return;
+        runFlash(flashColor, 1, 150, 750);
+    }, [flashTrigger]);
+
+    useEffect(() => {
+        if (!closeTrigger) return;
+        swipeRef.current?.close();
+    }, [closeTrigger]);
 
     const springTitle = (toValue: number) =>
         Animated.spring(titleShift, {
             toValue,
             useNativeDriver: true,
-            tension: 120,
-            friction: 10,
+            tension: 90,
+            friction: 20,
         }).start();
 
+    const borderRadius = anySwipeOpen ? 0 : 12;
+
     return (
+        <Animated.View style={{ opacity: enterOpacity, transform: [{ translateY: enterY }] }}>
         <Swipeable
             ref={swipeRef}
             renderLeftActions={
@@ -98,11 +159,21 @@ export function PillTableRow<T>({
             failOffsetY={[-10, 10]}
             onSwipeableWillOpen={(direction) => {
                 setAnySwipeOpen(true);
-                const isDelete = direction === 'right';
-                setIsSwiping(isDelete);
-                if (isDelete) springTitle(75);
+                const isLeft = direction === 'right';
+                setIsSwiping(isLeft);
+                if (isLeft) {
+                    springTitle(leftActionsOffset);
+                    Animated.timing(imageOpacity, { toValue: 0, duration: 120, useNativeDriver: true }).start();
+                } else {
+                    if (rightActionsOffset) springTitle(-rightActionsOffset);
+                }
             }}
-            onSwipeableWillClose={() => { setAnySwipeOpen(false); setIsSwiping(false); springTitle(0); }}>
+            onSwipeableWillClose={() => {
+                setAnySwipeOpen(false);
+                setIsSwiping(false);
+                springTitle(0);
+                Animated.timing(imageOpacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+            }}>
             <RowComponent
                 delayPressIn={150}
                 key={rowKey ? rowKey(item, index) : index}
@@ -111,21 +182,33 @@ export function PillTableRow<T>({
                         flexDirection: 'row',
                         alignItems: 'center',
                         backgroundColor: theme.color.surface,
-                        borderTopRightRadius: anySwipeOpen ? 0 : 12,
-                        borderBottomRightRadius: anySwipeOpen ? 0 : 12,
-                        borderTopLeftRadius: anySwipeOpen ? 0 : 12,
-                        borderBottomLeftRadius: anySwipeOpen ? 0 : 12,
+                        borderTopRightRadius: borderRadius,
+                        borderBottomRightRadius: borderRadius,
+                        borderTopLeftRadius: borderRadius,
+                        borderBottomLeftRadius: borderRadius,
                         borderWidth: 1,
                         borderColor: theme.color.border,
                         paddingVertical: 12,
                         paddingHorizontal: 18,
                         marginVertical: 6,
+                        overflow: 'hidden',
                     },
                     pillStyle,
                 ]}
+                onPressIn={onRowPress ? () => runFlash(theme.color.primary, 0.65, 60, 220) : undefined}
                 onPress={onRowPress ? () => onRowPress(item) : undefined}>
+
+                <Animated.View
+                    pointerEvents="none"
+                    style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: activeFlashColor,
+                        opacity: flashOpacity,
+                    }} />
+
                 {imageSrc && (
-                    <Image
+                    <Animated.Image
                         source={
                             typeof imageSrc === 'string'
                                 ? { uri: imageSrc }
@@ -137,6 +220,7 @@ export function PillTableRow<T>({
                                 height: 48,
                                 borderRadius: 24,
                                 marginRight: 16,
+                                opacity: imageOpacity,
                             },
                             imageStyle,
                         ]}/>
@@ -181,5 +265,6 @@ export function PillTableRow<T>({
                 )}
             </RowComponent>
         </Swipeable>
+        </Animated.View>
     );
 }

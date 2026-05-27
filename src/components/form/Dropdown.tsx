@@ -23,6 +23,7 @@ export type DropdownOption<T = any> = {
     description?: string;
     rightText?: string;
     selectedText?: string;
+    divider?: boolean;
 };
 
 export type DropdownHandle = {
@@ -113,7 +114,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
     };
 
     const close = () => animateOutAnd(() => setVisible(false));
-    const selectedOption = options.find(opt => opt?.value === value);
+    const selectedOption = options.find(opt => !opt?.divider && opt?.value === value);
 
     return (
         <View style={formStyles.wrapper}>
@@ -169,7 +170,9 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
                         keyboardShouldPersistTaps="handled"
                         data={options}
                         keyExtractor={(_, idx) => String(idx)}
-                        renderItem={({ item }) => (
+                        renderItem={({ item }) => item.divider ? (
+                            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: activeTheme.color.border, marginHorizontal: 16, marginVertical: 4 }} />
+                        ) : (
                             <TouchableOpacity
                                 style={[
                                     activeTheme.styles.row,

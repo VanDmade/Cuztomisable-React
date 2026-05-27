@@ -30,6 +30,8 @@ type Props = {
     onThumbnailChange?: (id: number) => void;
 
     defaultImageSource?: any;
+    size?: number;
+    bordered?: boolean;
 };
 
 export const ImageUploader: React.FC<Props> = ({
@@ -40,6 +42,8 @@ export const ImageUploader: React.FC<Props> = ({
     thumbnailImage,
     onThumbnailChange,
     defaultImageSource,
+    size = 120,
+    bordered = false,
 }) => {
     const theme = useTheme();
     const scrollRef = useRef<ScrollView>(null);
@@ -97,8 +101,7 @@ export const ImageUploader: React.FC<Props> = ({
 
                 onChange(isObjectMode ? next : next.map((i) => i.uri));
             } else {
-                const uri = assets[0]?.uri;
-                onChange(uri);
+                onChange(assets[0] ?? null);
             }
         }
     }, [multiple, list, onChange, maxSelections, isObjectMode]);
@@ -132,7 +135,11 @@ export const ImageUploader: React.FC<Props> = ({
                                     ? { uri }
                                     : defaultImageSource
                             }
-                            style={styles.singleImage} />
+                            style={[
+                                styles.singleImage,
+                                { width: size, height: size, borderRadius: size / 2 },
+                                bordered && { borderWidth: 2, borderColor: theme.color.secondary },
+                            ]} />
                     </Pressable>
                     {uri && (
                         <Pressable
@@ -202,7 +209,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     singleWrapper: {
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     singleImage: {
         width: 120,

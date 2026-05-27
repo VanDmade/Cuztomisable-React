@@ -92,7 +92,7 @@ export const Header: React.FC<Props> = ({
 					{back && (
 						<Image
 							source={theme.image.back}
-							style={styles.item}
+							style={[styles.item, { tintColor: theme.color.secondary }]}
 							resizeMode="cover"
 						/>
 					)}
@@ -140,6 +140,7 @@ export const Header: React.FC<Props> = ({
 									{
 										borderColor: theme.color.primary,
 										borderWidth: action.uri ? 1 : 0,
+										tintColor: action.uri ? undefined : theme.color.secondary,
 									},
 								]}
 								resizeMode="cover"

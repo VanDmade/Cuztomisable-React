@@ -1,0 +1,16 @@
+export const measurements = [
+    { value: 'none', text: 'None' },
+    { value: 'tsp', text: 'tsp' },
+    { value: 'tbsp', text: 'tbsp' },
+    { value: 'cup', text: 'cup(s)' },
+    { value: 'pint', text: 'pint(s)' },
+    { value: 'quart', text: 'quart(s)' },
+    { value: 'gallon', text: 'gallon(s)' },
+    { value: 'floz', text: 'fl oz' },
+    { value: 'liter', text: 'liter(s)' },
+    { value: 'ml', text: 'ml' },
+    { value: 'oz', text: 'oz' },
+    { value: 'lb', text: 'lb' },
+    { value: 'g', text: 'g' },
+    { value: 'kg', text: 'kg' },
+];

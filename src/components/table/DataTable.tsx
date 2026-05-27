@@ -53,6 +53,8 @@ type DataTableProps<T> = {
     getCellStyle?: (row: T, colKey: string, index: number) => ViewStyle | undefined;
     getCellTextStyle?: (row: T, colKey: string, index: number) => TextStyle | undefined;
     showHeader?: boolean;
+    minLoadingDuration?: number;
+    renderLoading?: React.ReactNode;
     renderRow?: (props: {
         item: T;
         index: number;
@@ -98,6 +100,8 @@ export function DataTable<T>({
     getCellStyle,
     getCellTextStyle,
     showHeader = true,
+    minLoadingDuration = 0,
+    renderLoading,
     renderRow,
 }: DataTableProps<T>) {
     const theme = useTheme();
@@ -160,6 +164,7 @@ export function DataTable<T>({
         }
         let active = true;
         const load = async () => {
+            const startTime = Date.now();
             try {
                 setLoading(true);
                 setError(null);
@@ -183,7 +188,14 @@ export function DataTable<T>({
                 setMeta(null);
             } finally {
                 if (active) {
-                    setLoading(false);
+                    const elapsed = Date.now() - startTime;
+                    const remaining = minLoadingDuration - elapsed;
+                    if (remaining > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, remaining));
+                    }
+                    if (active) {
+                        setLoading(false);
+                    }
                 }
             }
         };
@@ -313,9 +325,11 @@ export function DataTable<T>({
                     {showHeader ? renderHeader() : null}
 
                     {loading ? (
-                        <View style={[theme.utils.pxmd, theme.utils.pymd]}>
-                            <Text style={{ color: theme.color.muted }}>Loading...</Text>
-                        </View>
+                        renderLoading ?? (
+                            <View style={[theme.utils.pxmd, theme.utils.pymd]}>
+                                <Text style={{ color: theme.color.muted }}>Loading...</Text>
+                            </View>
+                        )
                     ) : error ? (
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
                             <Text style={{ color: theme.color.danger }}>{error}</Text>

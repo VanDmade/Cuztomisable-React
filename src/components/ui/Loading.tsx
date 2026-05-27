@@ -37,7 +37,7 @@ export const Loading: React.FC<{
         if (fadeOut) {
             Animated.timing(fadeAnim, {
                 toValue: 0,
-                duration: 1000,
+                duration: 300,
                 easing: Easing.inOut(Easing.quad),
                 useNativeDriver: true,
             }).start();
@@ -70,7 +70,7 @@ export const Loading: React.FC<{
                     utils.mbsm,
                     {
                         backgroundColor: color.background,
-                        tintColor: color.primary,
+                        tintColor: color.secondary,
                         transform: [{ rotate: spinInterpolate }],
                     },
                 ]}
