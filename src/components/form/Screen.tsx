@@ -15,7 +15,9 @@ type Props = {
     children: (api: {}) => React.ReactNode;
     backgroundColor?: string;
     paddingTop?: number|string;
+    paddingBottom?: number;
     centered?: boolean;
+    scrollToTopTrigger?: number | string;
 };
 
 const TOOLBAR_HEIGHT = 65;
@@ -24,7 +26,9 @@ export function FormScreen({
     children,
     backgroundColor,
     paddingTop = 60,
+    paddingBottom = 0,
     centered = false,
+    scrollToTopTrigger,
 }: Props) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
@@ -43,7 +47,13 @@ export function FormScreen({
         return () => { s.remove(); h.remove(); };
     }, []);
 
-    const bottomPadding = (height > 0 ? height : 0) + insets.bottom;
+    useEffect(() => {
+        if (scrollToTopTrigger !== undefined) {
+            scrollRef.current?.scrollTo({ y: 0, animated: false });
+        }
+    }, [scrollToTopTrigger]);
+
+    const bottomPadding = (height > 0 ? height : 0) + insets.bottom + paddingBottom;
 
     return (
         <View style={{ flex: 1, backgroundColor: effectiveBackgroundColor }}>

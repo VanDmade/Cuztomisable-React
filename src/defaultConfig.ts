@@ -29,6 +29,12 @@ export const defaultConfig = {
     features: {
         enableAdvancedRoles: true,
         debugMode: __DEV__,
+        barPhotoUpload: {
+            enabled: false,
+            maxPhotos: 10,
+            imagesPerBatch: 3,
+            maxBatchSizeMb: 15,
+        },
     },
     onboarding: [
         {
@@ -63,32 +69,16 @@ export const defaultConfig = {
         },
     ],
     navigation: {
-        items: [
-            { key: 'drinks', route: '/(tabs)/drinks', icon: 'beer-outline', position: 'left' },
-            { key: 'shopping', route: '/(tabs)/shopping', icon: 'format-list-checkbox', position: 'left' },
-            { key: 'bars', route: '/(tabs)/bars', icon: 'file-cabinet', position: 'right' },
-            { key: 'more', route: '/(tabs)/drinks', icon: 'dots-horizontal', position: 'right' },
-        ],
+        items: [],
         enablePlusDropdown: false,
-        plusActionRoute: '/(tabs)/drinks/form',
-        plusActionRoutes: {
-            drinks: '/(tabs)/drinks/form',
-            bars: '/(tabs)/bars/form',
-            shopping: '/(tabs)/shopping/form',
-            ingredients: '/(tabs)/ingredients/form',
-            glasses: '/(tabs)/glasses/form',
-            equipment: '/(tabs)/equipment/form',
-        },
+        plusActionRoute: '',
+        plusActionRoutes: {},
         plusTitle: 'Quick Links',
         actions: [],
         dropdown: {
-            key: 'more',
+            key: '',
             title: 'Quick Links',
-            options: [
-                { label: 'Ingredients', value: '/(tabs)/ingredients' },
-                { label: 'Glasses', value: '/(tabs)/glasses' },
-                { label: 'Equipment', value: '/(tabs)/equipment' },
-            ],
+            options: [],
         },
     },
 } as const;

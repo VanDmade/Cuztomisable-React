@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../providers/ThemeProvider';
@@ -28,6 +28,8 @@ type Props = {
 	dropdownKey?: string;
 	dropdownOptions?: DropdownOption<string>[];
 	dropdownTitle?: string;
+	fabIcon?: IconName;
+	fabOnPress?: () => void;
 };
 
 export const Footer: React.FC<Props> = ({
@@ -41,6 +43,8 @@ export const Footer: React.FC<Props> = ({
 	dropdownKey,
 	dropdownOptions = [] as DropdownOption<string>[],
 	dropdownTitle = 'Select an option',
+	fabIcon,
+	fabOnPress,
 }) => {
 	const theme = useTheme();
 	const router = useRouter();
@@ -52,8 +56,24 @@ export const Footer: React.FC<Props> = ({
 	const navDropdownRef = useRef<DropdownHandle>(null);
 	const safeItems = useMemo(() => (items ?? []).slice(0, 6), [items]);
 	const showPlusDropdown = enablePlusDropdown && actions.length > 0;
-	const showPlus = showPlusDropdown || !!plusActionRoute || !!plusActionRoutes;
+	const showPlus = showPlusDropdown || !!plusActionRoute || !!plusActionRoutes || !!fabOnPress;
 	const showNavDropdown = !!dropdownKey && dropdownOptions.length > 0;
+
+	// True when the current page matches one of the dropdown options (e.g. ingredients/glasses/equipment)
+	const isDropdownRouteActive = useMemo(() => {
+		if (!activeKey || !dropdownOptions.length) {
+			return false;
+		}
+		return dropdownOptions.some(opt => !opt.divider && (opt.value as string)?.includes(`/${activeKey}`));
+	}, [activeKey, dropdownOptions]);
+
+	// The matching dropdown option value for the current page (used to highlight it in the modal)
+	const activeDropdownRoute = useMemo(() => {
+		if (!activeKey || !dropdownOptions.length) {
+			return undefined;
+		}
+		return dropdownOptions.find(opt => !opt.divider && (opt.value as string)?.includes(`/${activeKey}`))?.value;
+	}, [activeKey, dropdownOptions]);
 
 	const leftItems = useMemo(
 		() => safeItems.filter(i => (i.position ?? 'left') !== 'right'),
@@ -71,12 +91,45 @@ export const Footer: React.FC<Props> = ({
 		}
 		return plusActionRoute;
 	};
+
 	const handleItemPress = (item: FooterNavItem) => {
+		// Already on this tab — do nothing
+		if (item.key === activeKey) {
+			return;
+		}
 		if (showNavDropdown && item.key === dropdownKey) {
 			navDropdownRef.current?.open();
 			return;
 		}
 		go(item.route);
+	};
+
+	const renderNavItem = (item: FooterNavItem) => {
+		const isActive = item.key === activeKey || (item.key === dropdownKey && isDropdownRouteActive);
+		return (
+			<TouchableOpacity
+				key={item.key}
+				activeOpacity={0.7}
+				onPress={() => handleItemPress(item)}
+				style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+				{isActive && (
+					<View style={{
+						position: 'absolute',
+						top: 0,
+						alignSelf: 'center',
+						width: '70%',
+						height: 3,
+						backgroundColor: theme.color.secondary,
+						borderBottomLeftRadius: 2,
+						borderBottomRightRadius: 2,
+					}} />
+				)}
+				<MaterialCommunityIcons
+					name={item.icon}
+					size={24}
+					color={isActive ? theme.color.secondary : theme.color.text} />
+			</TouchableOpacity>
+		);
 	};
 
 	return (
@@ -90,6 +143,7 @@ export const Footer: React.FC<Props> = ({
 							showField={false}
 							modalTitle={dropdownTitle}
 							options={dropdownOptions}
+							value={activeDropdownRoute}
 							onSelect={(route) => go(route)} />
 					</View>
 				)}
@@ -118,42 +172,14 @@ export const Footer: React.FC<Props> = ({
 					},
 				]}>
 					{showPlus ? (
-						<View style={[theme.styles.flex, theme.styles.row, theme.styles.alignCenter, theme.styles.rowSpaceBetween]}>
-							
-							{/* LEFT */}
-							<View style={[theme.styles.flex, theme.styles.alignCenter]}>
-								<View style={[theme.styles.row, theme.styles.alignCenter, { gap: 24 }]}>
-									{leftItems.map(item => (
-										<MaterialCommunityIcons
-											key={item.key}
-											name={item.icon}
-											size={24}
-											color={theme.color.text}
-											onPress={() => handleItemPress(item)}
-										/>
-									))}
-								</View>
+						<View style={[theme.styles.flex, theme.styles.row, theme.styles.rowSpaceBetween, { alignSelf: 'stretch' }]}>
+							<View style={[theme.styles.flex, { flexDirection: 'row', alignSelf: 'stretch' }]}>
+								{leftItems.map(item => renderNavItem(item))}
 							</View>
-
-							{/* SPACER (for FAB) */}
 							<View style={{ width: 64 }} />
-
-							{/* RIGHT */}
-							<View style={[theme.styles.flex, theme.styles.alignCenter]}>
-								<View style={[theme.styles.row, theme.styles.alignCenter, { gap: 24 }]}>
-									{rightItems.map(item => (
-										<MaterialCommunityIcons
-											key={item.key}
-											name={item.icon}
-											size={24}
-											color={theme.color.text}
-											onPress={() => handleItemPress(item)}
-										/>
-									))}
-								</View>
+							<View style={[theme.styles.flex, { flexDirection: 'row', alignSelf: 'stretch' }]}>
+								{rightItems.map(item => renderNavItem(item))}
 							</View>
-
-							{/* FAB */}
 							<View
 								style={[
 									theme.styles.positionAbsolute,
@@ -164,8 +190,7 @@ export const Footer: React.FC<Props> = ({
 										top: -16,
 									},
 								]}
-								pointerEvents="box-none"
-							>
+								pointerEvents="box-none">
 								<View
 									style={[
 										theme.utils.circle64,
@@ -176,18 +201,23 @@ export const Footer: React.FC<Props> = ({
 											borderWidth: 1,
 											borderColor: theme.color.border,
 										},
-									]}
-								>
+									]}>
 									<MaterialCommunityIcons
-										name="plus"
+										name={fabIcon ?? "plus"}
 										size={28}
 										color="#fff"
 										onPress={() => {
+											if (fabOnPress) {
+												fabOnPress();
+												return;
+											}
 											if (showPlusDropdown) {
 												plusDropdownRef.current?.open();
 											} else {
 												const route = resolvePlusRoute();
-												if (route) go(route);
+												if (route) {
+													go(route);
+												}
 											}
 										}}
 									/>
@@ -195,16 +225,8 @@ export const Footer: React.FC<Props> = ({
 							</View>
 						</View>
 					) : (
-						<View style={[theme.styles.flex, theme.styles.row, theme.styles.alignCenter, theme.styles.rowSpaceEvenly]}>
-							{safeItems.map(item => (
-								<MaterialCommunityIcons
-									key={item.key}
-									name={item.icon}
-									size={24}
-									color={theme.color.text}
-									onPress={() => handleItemPress(item)}
-								/>
-							))}
+						<View style={[theme.styles.flex, { flexDirection: 'row', alignSelf: 'stretch' }]}>
+							{safeItems.map(item => renderNavItem(item))}
 						</View>
 					)}
 				</View>

@@ -9,6 +9,7 @@ type Props = {
     subtitle?: string;
     logoSource?: ImageSourcePropType;
     containerStyle?: ViewStyle | ViewStyle[];
+    rightContent?: () => React.ReactNode;
 };
 
 export const FormHeader: React.FC<Props> = ({
@@ -17,6 +18,7 @@ export const FormHeader: React.FC<Props> = ({
     subtitle,
     logoSource,
     containerStyle,
+    rightContent,
 }) => {
     const activeTheme = theme ?? useTheme();
     return (
@@ -27,12 +29,13 @@ export const FormHeader: React.FC<Props> = ({
                     style={styles.logo}
                     resizeMode="contain" />
             )}
-            <View style={styles.headerTextWrapper}>
+            <View style={[styles.headerTextWrapper, { flex: 1 }]}>
                 <Text style={activeTheme.typography.variants.title}>{title}</Text>
                 {subtitle ? (
                     <Text style={activeTheme.typography.variants.subtitle}>{subtitle}</Text>
                 ) : null}
             </View>
+            {rightContent ? rightContent() : null}
         </View>
     );
 };

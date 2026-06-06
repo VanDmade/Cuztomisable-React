@@ -12,7 +12,7 @@ const colors = {
 
 export function Message() {
   const { banner, clearMessage } = useMessage();
-  const slideAnim = useRef(new Animated.Value(100)).current;
+  const slideAnim = useRef(new Animated.Value(-120)).current;
   const visible = !!banner?.text;
   const message = banner?.text ?? '';
   const type = banner?.type ?? 'info';
@@ -24,14 +24,14 @@ export function Message() {
   }, [message]);
   useEffect(() => {
     if (visible) {
-      // Slide up
+      // Slide down from top
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
       }).start();
       const timer = setTimeout(() => {
         Animated.timing(slideAnim, {
-          toValue: 100,
+          toValue: -120,
           duration: 200,
           useNativeDriver: true,
         }).start(() => {
@@ -57,7 +57,7 @@ export function Message() {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 40,
+    top: 60,
     left: 16,
     right: 16,
     paddingVertical: 14,

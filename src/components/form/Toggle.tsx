@@ -19,6 +19,7 @@ type FormToggleProps = {
     helperText?: string;
     error?: string | string[];
     disabled?: boolean;
+    reversed?: boolean;
 };
 
 export const FormToggle: React.FC<FormToggleProps> = ({
@@ -28,6 +29,7 @@ export const FormToggle: React.FC<FormToggleProps> = ({
     helperText,
     error,
     disabled = false,
+    reversed = false,
 }) => {
     const theme = useTheme();
     const formStyles = React.useMemo(() => makeFormStyles(theme), [theme]);
@@ -51,27 +53,39 @@ export const FormToggle: React.FC<FormToggleProps> = ({
                     styles.row,
                     {
                         opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+                        flexDirection: reversed ? 'row' : 'row',
                     },
                 ]}>
-                <View>
+                {reversed && (
+                    <Switch
+                        value={value}
+                        onValueChange={onValueChange}
+                        disabled={disabled}
+                        thumbColor={Platform.OS === 'android' ? (value ? theme.color.primary : '#f4f3f4') : undefined}
+                        trackColor={{
+                            false: hasError ? (theme.color.danger + '55') : (theme.color.border ?? '#CCC'),
+                            true: hasError ? theme.color.danger : (theme.color.primary + '99'),
+                        }}
+                        style={{ height: 22 }} />
+                )}
+                <View style={reversed ? { marginLeft: 8 } : { marginRight: 0 }}>
                     {label ? (<Text style={[formStyles.inlineLabel]}>{label}</Text>) : null}
                     {helperText ? (
-                        <Text
-                        style={[
-                            formStyles.helper,
-                        ]}>{helperText}</Text>
+                        <Text style={[formStyles.helper]}>{helperText}</Text>
                     ) : null}
                 </View>
-            <Switch
-                value={value}
-                onValueChange={onValueChange}
-                disabled={disabled}
-                thumbColor={Platform.OS === 'android' ? (value ? theme.color.primary : '#f4f3f4') : undefined}
-                trackColor={{
-                    false: hasError ? (theme.color.danger + '55') : (theme.color.border ?? '#CCC'),
-                    true: hasError ? theme.color.danger : (theme.color.primary + '99'),
-                }}
-                style={{ height: 22 }} />
+                {!reversed && (
+                    <Switch
+                        value={value}
+                        onValueChange={onValueChange}
+                        disabled={disabled}
+                        thumbColor={Platform.OS === 'android' ? (value ? theme.color.primary : '#f4f3f4') : undefined}
+                        trackColor={{
+                            false: hasError ? (theme.color.danger + '55') : (theme.color.border ?? '#CCC'),
+                            true: hasError ? theme.color.danger : (theme.color.primary + '99'),
+                        }}
+                        style={{ height: 22 }} />
+                )}
             </Pressable>
             {hasError && errorText ? (
                 <Text style={[formStyles.error]}>

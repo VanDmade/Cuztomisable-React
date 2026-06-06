@@ -1,6 +1,6 @@
 // src/components/form/Autocomplete.tsx
-import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
 import type { DropdownOption } from './Dropdown';
@@ -21,6 +21,9 @@ type AutocompleteProps<T = any> = {
     clearOnSelect?: boolean;
     fillOnSelect?: boolean;
     filterOption?: (option: DropdownOption<T>, query: string) => boolean;
+    containerStyle?: any;
+    inputStyle?: any;
+    hideDetails?: boolean;
 };
 
 export const FormAutocomplete = <T,>({
@@ -38,10 +41,15 @@ export const FormAutocomplete = <T,>({
     clearOnSelect = false,
     fillOnSelect = true,
     filterOption,
+    containerStyle,
+    inputStyle,
+    hideDetails = false,
 }: AutocompleteProps<T>) => {
     const activeTheme = theme ?? useTheme();
     const formStyles = useMemo(() => makeFormStyles(activeTheme), [activeTheme]);
     const [internalValue, setInternalValue] = useState(value ?? '');
+    const [open, setOpen] = useState(false);
+    const justSelectedRef = useRef(false);
 
     useEffect(() => {
         if (value !== undefined) {
@@ -50,24 +58,39 @@ export const FormAutocomplete = <T,>({
     }, [value]);
 
     const handleChange = (text: string) => {
-        if (value === undefined) {
-            setInternalValue(text);
+        if (justSelectedRef.current) {
+            justSelectedRef.current = false;
+            return;
         }
+        if (value === undefined) setInternalValue(text);
+        setOpen(true);
         onChangeText?.(text);
+    };
+
+    const handleSelect = (item: DropdownOption<T>) => {
+        justSelectedRef.current = fillOnSelect;
+        setOpen(false);
+        onSelect?.(item.value, item);
+        if (fillOnSelect) {
+            if (value === undefined) setInternalValue(item.label);
+            onChangeText?.(item.label);
+        }
+        if (clearOnSelect) {
+            if (value === undefined) setInternalValue('');
+            onChangeText?.('');
+        }
     };
 
     const query = value !== undefined ? value : internalValue;
     const filtered = useMemo(() => {
-        if (query.length < minChars) {
-            return [] as DropdownOption<T>[];
-        }
+        if (!open || query.length < minChars) return [] as DropdownOption<T>[];
         const q = query.toLowerCase();
         const filter = filterOption ?? ((opt: DropdownOption<T>, qText: string) => opt.label.toLowerCase().includes(qText));
         return options.filter((opt) => filter(opt, q));
-    }, [options, query, minChars, filterOption]);
+    }, [options, query, minChars, filterOption, open]);
 
     return (
-        <View style={formStyles.wrapper}>
+        <View style={[formStyles.wrapper, containerStyle]}>
             {label ? (<Text style={formStyles.label}>{label}</Text>) : null}
             <TextInput
                 value={query}
@@ -78,33 +101,21 @@ export const FormAutocomplete = <T,>({
                     formStyles.input,
                     disabled && formStyles.inputDisabled,
                     error && formStyles.errorBorder,
+                    inputStyle,
                 ]}
                 onChangeText={handleChange}
+                onBlur={() => setOpen(false)}
             />
-            {helperText ? (<Text style={formStyles.helper}>{helperText}</Text>) : null}
-            {error ? (<Text style={formStyles.error}>{error}</Text>) : null}
+            {!hideDetails && helperText ? (<Text style={formStyles.helper}>{helperText}</Text>) : null}
+            {!hideDetails && error ? (<Text style={formStyles.error}>{error}</Text>) : null}
             {filtered.length > 0 ? (
-                <View style={[styles.list, { borderColor: activeTheme.color.border, backgroundColor: activeTheme.color.background }]}
-                >
-                    <FlatList
-                        keyboardShouldPersistTaps="handled"
-                        data={filtered}
-                        keyExtractor={(_, index) => String(index)}
-                        renderItem={({ item }) => (
+                <View style={[styles.list, { borderColor: activeTheme.color.border, backgroundColor: activeTheme.color.background }]}>
+                    <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+                        {filtered.map((item, index) => (
                             <Pressable
-                                onPress={() => {
-                                    onSelect?.(item.value, item);
-                                    if (fillOnSelect) {
-                                        handleChange(item.label);
-                                    }
-                                    if (clearOnSelect) {
-                                        handleChange('');
-                                    }
-                                }}
-                                style={({ pressed }) => [
-                                    styles.listItem,
-                                    { opacity: pressed ? 0.85 : 1 },
-                                ]}
+                                key={String(index)}
+                                onPress={() => handleSelect(item)}
+                                style={({ pressed }) => [styles.listItem, { opacity: pressed ? 0.85 : 1 }]}
                             >
                                 <Text style={{ color: activeTheme.color.text }}>{item.label}</Text>
                                 {!!item.description && (
@@ -113,8 +124,8 @@ export const FormAutocomplete = <T,>({
                                     </Text>
                                 )}
                             </Pressable>
-                        )}
-                    />
+                        ))}
+                    </ScrollView>
                 </View>
             ) : null}
         </View>

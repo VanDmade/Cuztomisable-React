@@ -19,9 +19,8 @@ type Props = {
 	logo?: boolean;
 	settings?: boolean;
 	back?: boolean;
-
-	/** 🔥 NEW */
 	rightActions?: HeaderAction[];
+	leftContent?: () => React.ReactNode;
 };
 
 export const Header: React.FC<Props> = ({
@@ -30,6 +29,7 @@ export const Header: React.FC<Props> = ({
 	settings = false,
 	back = false,
 	rightActions = [],
+	leftContent,
 }) => {
 	const theme = useTheme();
 	const router = useRouter();
@@ -77,36 +77,40 @@ export const Header: React.FC<Props> = ({
 			]}
 		>
 			{/* LEFT SIDE */}
-			<View style={[theme.styles.row, theme.styles.alignCenter]}>
-				<TouchableOpacity onPress={goToHome} activeOpacity={0.8}>
-					{logo && (
-						<Image
-							source={theme.image.logo}
-							style={styles.item}
-							resizeMode="contain"
-						/>
-					)}
-				</TouchableOpacity>
+			<View style={[theme.styles.row, theme.styles.alignCenter, { flex: 1, marginRight: 8 }]}>
+				{leftContent ? leftContent() : (
+					<>
+						<TouchableOpacity onPress={goToHome} activeOpacity={0.8}>
+							{logo && (
+								<Image
+									source={theme.image.logo}
+									style={styles.item}
+									resizeMode="contain"
+								/>
+							)}
+						</TouchableOpacity>
 
-				<TouchableOpacity onPress={goBack} activeOpacity={0.8}>
-					{back && (
-						<Image
-							source={theme.image.back}
-							style={[styles.item, { tintColor: theme.color.secondary }]}
-							resizeMode="cover"
-						/>
-					)}
-				</TouchableOpacity>
+						<TouchableOpacity onPress={goBack} activeOpacity={0.8}>
+							{back && (
+								<Image
+									source={theme.image.back}
+									style={[styles.item, { tintColor: theme.color.secondary }]}
+									resizeMode="cover"
+								/>
+							)}
+						</TouchableOpacity>
 
-				{title && (
-					<Text
-						style={[
-							theme.typography.variants.title,
-							theme.utils.plsm,
-						]}
-					>
-						{title}
-					</Text>
+						{title && (
+							<Text
+								style={[
+									theme.typography.variants.title,
+									theme.utils.plsm,
+								]}
+							>
+								{title}
+							</Text>
+						)}
+					</>
 				)}
 			</View>
 

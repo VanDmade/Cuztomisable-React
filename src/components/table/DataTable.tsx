@@ -40,7 +40,7 @@ type PaginationMeta = {
 
 type DataTableProps<T> = {
     url?: string;
-    columns: DataTableColumn<T>[];
+    columns?: DataTableColumn<T>[];
     rowKey?: (row: T, index: number) => string | number;
     searchable?: boolean;
     filters?: DataTableFilter[];
@@ -60,6 +60,7 @@ type DataTableProps<T> = {
         index: number;
         setRows: React.Dispatch<React.SetStateAction<T[]>>;
     }) => React.ReactNode;
+    filterRows?: (rows: T[]) => T[];
 };
 
 const DEFAULT_PAGE_SIZES = [10, 25, 50];
@@ -103,6 +104,7 @@ export function DataTable<T>({
     minLoadingDuration = 0,
     renderLoading,
     renderRow,
+    filterRows,
 }: DataTableProps<T>) {
     const theme = useTheme();
 
@@ -205,6 +207,7 @@ export function DataTable<T>({
         };
     }, [url, params]);
 
+    const displayRows = filterRows ? filterRows(rows) : rows;
     const total = meta?.total;
     const maxPage = total ? Math.max(1, Math.ceil(total / pageSize)) : null;
     const canPrev = page > 1 && !loading;
@@ -334,13 +337,13 @@ export function DataTable<T>({
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
                             <Text style={{ color: theme.color.danger }}>{error}</Text>
                         </View>
-                    ) : rows.length === 0 ? (
+                    ) : displayRows.length === 0 ? (
                         <View style={[theme.utils.pxmd, theme.utils.pymd]}>
                             <Text style={{ color: theme.color.muted }}>No results found.</Text>
                         </View>
                     ) : (
                         <FlatList
-                            data={rows}
+                            data={displayRows}
                             keyExtractor={(item, index) =>
                                 String(rowKey ? rowKey(item, index) : index)
                             }
@@ -375,13 +378,14 @@ export function DataTable<T>({
                 ]}>
                 <Button
                     iconOnly
+                    size="lg"
                     disabled={!canPrev}
                     onPress={() => setPage((p) => Math.max(1, p - 1))}
                     left={
                         <MaterialIcons
                             name="chevron-left"
-                            size={20}
-                            color={canPrev ? theme.color.buttonTextColor : theme.color.muted} />
+                            size={24}
+                            color={canPrev ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
                     } />
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={{ color: theme.color.muted, fontSize: 21 }}>Page</Text>
@@ -416,13 +420,14 @@ export function DataTable<T>({
                 </View>
                 <Button
                     iconOnly
+                    size="lg"
                     disabled={!canNext}
                     onPress={() => setPage((p) => Math.min(maxPage ?? p + 1, p + 1))}
                     left={
                         <MaterialIcons
                             name="chevron-right"
-                            size={20}
-                            color={canNext ? theme.color.buttonTextColor : theme.color.muted} />
+                            size={24}
+                            color={canNext ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
                     } />
             </View>
         </View>

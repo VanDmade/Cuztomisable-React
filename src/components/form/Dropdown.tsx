@@ -4,6 +4,7 @@ import {
     Animated,
     Easing,
     FlatList,
+    Keyboard,
     Modal,
     Pressable,
     StyleSheet,
@@ -77,6 +78,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
     useImperativeHandle(ref, () => ({
         open: () => {
             if (!disabled) {
+                Keyboard.dismiss();
                 setVisible(true);
             }
         },
@@ -107,9 +109,8 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
     };
 
     const open = () => {
-        if (disabled) {
-            return;
-        }
+        if (disabled) return;
+        Keyboard.dismiss();
         setVisible(true);
     };
 
