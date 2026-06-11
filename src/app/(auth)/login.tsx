@@ -83,9 +83,6 @@ export default function LoginScreen() {
                     <LinkText onPress={goToForgotPassword} style={theme.utils.mtmd} disabled={busy}>
                         Forgot password?
                     </LinkText>
-                    <LinkText onPress={handleReset} style={theme.utils.mtmd} disabled={busy}>
-                        Reset Onboarding
-                    </LinkText>
                     <LinkText onPress={goToRegister} style={theme.utils.mtsm} muted disabled={busy}>
                         Don't have an account?{' '}
                         <Text

@@ -1,12 +1,8 @@
 // src/components/form/Screen.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-    Keyboard,
-    KeyboardEvent,
-    KeyboardEventName,
-    Platform,
+    KeyboardAvoidingView,
     ScrollView,
-    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -20,8 +16,6 @@ type Props = {
     scrollToTopTrigger?: number | string;
 };
 
-const TOOLBAR_HEIGHT = 65;
-
 export function FormScreen({
     children,
     backgroundColor,
@@ -33,19 +27,7 @@ export function FormScreen({
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const scrollRef = useRef<ScrollView>(null);
-    const [height, setHeight] = useState(0);
     const effectiveBackgroundColor = backgroundColor ?? theme.color.background;
-    useEffect(() => {
-        const onShow = (e: KeyboardEvent) => setHeight(Math.max(0, e.endCoordinates?.height || 0));
-        const onHide = () => setHeight(0);
-
-        const showEvent: KeyboardEventName = Platform.select({ ios: 'keyboardWillShow', android: 'keyboardDidShow' })!;
-        const hideEvent: KeyboardEventName = Platform.select({ ios: 'keyboardWillHide', android: 'keyboardDidHide' })!;
-
-        const s = Keyboard.addListener(showEvent, onShow);
-        const h = Keyboard.addListener(hideEvent, onHide);
-        return () => { s.remove(); h.remove(); };
-    }, []);
 
     useEffect(() => {
         if (scrollToTopTrigger !== undefined) {
@@ -53,10 +35,12 @@ export function FormScreen({
         }
     }, [scrollToTopTrigger]);
 
-    const bottomPadding = (height > 0 ? height : 0) + insets.bottom + paddingBottom;
+    const bottomPadding = insets.bottom + paddingBottom;
 
     return (
-        <View style={{ flex: 1, backgroundColor: effectiveBackgroundColor }}>
+        <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: effectiveBackgroundColor }}
+            behavior="padding">
             <ScrollView
                 ref={scrollRef}
                 style={{ flex: 1 }}
@@ -71,10 +55,6 @@ export function FormScreen({
                 keyboardDismissMode="on-drag">
                 {typeof children === 'function' ? children({}) : children}
             </ScrollView>
-            <View
-                pointerEvents="box-none"
-                style={{position: 'absolute', left: 0, right: 0, bottom: insets.bottom}}>
-            </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 }

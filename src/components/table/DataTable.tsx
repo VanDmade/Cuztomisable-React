@@ -43,6 +43,8 @@ type DataTableProps<T> = {
     columns?: DataTableColumn<T>[];
     rowKey?: (row: T, index: number) => string | number;
     searchable?: boolean;
+    initialSearch?: string;
+    onSearchChange?: (value: string) => void;
     filters?: DataTableFilter[];
     filterButton?: React.ReactNode;
     initialPageSize?: number;
@@ -91,6 +93,8 @@ export function DataTable<T>({
     columns,
     rowKey,
     searchable = true,
+    initialSearch,
+    onSearchChange,
     filters = [],
     filterButton,
     initialPageSize = 10,
@@ -113,8 +117,10 @@ export function DataTable<T>({
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(initialPageSize);
-    const [searchInput, setSearchInput] = useState('');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchInput, setSearchInput] = useState(initialSearch ?? '');
+    const [searchTerm, setSearchTerm] = useState(initialSearch?.trim() ?? '');
+    const onSearchChangeRef = React.useRef(onSearchChange);
+    onSearchChangeRef.current = onSearchChange;
     const [filterValues, setFilterValues] = useState<Record<string, string | number | undefined>>(() => {
         return filters.reduce((acc, f) => {
             acc[f.key] = f.defaultValue;
@@ -127,6 +133,10 @@ export function DataTable<T>({
     useEffect(() => {
         const id = setTimeout(() => setSearchTerm(searchInput.trim()), 350);
         return () => clearTimeout(id);
+    }, [searchInput]);
+
+    useEffect(() => {
+        onSearchChangeRef.current?.(searchInput);
     }, [searchInput]);
 
     useEffect(() => {
@@ -355,81 +365,85 @@ export function DataTable<T>({
                     )}
                 </View>
             </ScrollView>
-            <View style={[theme.utils.ptmd]}>
-                <Dropdown
-                    theme={theme}
-                    value={pageSize}
-                    options={pageSizeOptions.map((size) => ({
-                        label: String(size),
-                        value: size,
-                    }))}
-                    onSelect={(val) => setPageSize(Number(val))}
-                    bordered />
-            </View>
-            <View
-                style={[
-                    theme.utils.ptmd,
-                    {
-                        flexDirection: 'row',
-                        width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    },
-                ]}>
-                <Button
-                    iconOnly
-                    size="lg"
-                    disabled={!canPrev}
-                    onPress={() => setPage((p) => Math.max(1, p - 1))}
-                    left={
-                        <MaterialIcons
-                            name="chevron-left"
-                            size={24}
-                            color={canPrev ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
-                    } />
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ color: theme.color.muted, fontSize: 21 }}>Page</Text>
-                    <TextInput
-                        value={pageInput}
-                        onChangeText={setPageInput}
-                        onBlur={() => {
-                            const parsed = parseInt(pageInput, 10);
-                            if (!isNaN(parsed)) {
-                                const clamped = Math.max(1, Math.min(parsed, maxPage ?? parsed));
-                                setPage(clamped);
-                                setPageInput(String(clamped));
-                            } else {
-                                setPageInput(String(page));
-                            }
-                        }}
-                        keyboardType="number-pad"
-                        selectTextOnFocus
-                        style={{
-                            color: theme.color.text,
-                            fontSize: 21,
-                            fontWeight: '600',
-                            borderBottomWidth: 1,
-                            borderBottomColor: theme.color.border,
-                            minWidth: 32,
-                            textAlign: 'center',
-                            paddingVertical: 2,
-                        }} />
-                    {maxPage ? (
-                        <Text style={{ color: theme.color.muted, fontSize: 21 }}>of {maxPage}</Text>
-                    ) : null}
-                </View>
-                <Button
-                    iconOnly
-                    size="lg"
-                    disabled={!canNext}
-                    onPress={() => setPage((p) => Math.min(maxPage ?? p + 1, p + 1))}
-                    left={
-                        <MaterialIcons
-                            name="chevron-right"
-                            size={24}
-                            color={canNext ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
-                    } />
-            </View>
+            {!loading && (
+                <>
+                    <View style={[theme.utils.ptmd]}>
+                        <Dropdown
+                            theme={theme}
+                            value={pageSize}
+                            options={pageSizeOptions.map((size) => ({
+                                label: String(size),
+                                value: size,
+                            }))}
+                            onSelect={(val) => setPageSize(Number(val))}
+                            bordered />
+                    </View>
+                    <View
+                        style={[
+                            theme.utils.ptmd,
+                            {
+                                flexDirection: 'row',
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                            },
+                        ]}>
+                        <Button
+                            iconOnly
+                            size="lg"
+                            disabled={!canPrev}
+                            onPress={() => setPage((p) => Math.max(1, p - 1))}
+                            left={
+                                <MaterialIcons
+                                    name="chevron-left"
+                                    size={24}
+                                    color={canPrev ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
+                            } />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ color: theme.color.muted, fontSize: 21 }}>Page</Text>
+                            <TextInput
+                                value={pageInput}
+                                onChangeText={setPageInput}
+                                onBlur={() => {
+                                    const parsed = parseInt(pageInput, 10);
+                                    if (!isNaN(parsed)) {
+                                        const clamped = Math.max(1, Math.min(parsed, maxPage ?? parsed));
+                                        setPage(clamped);
+                                        setPageInput(String(clamped));
+                                    } else {
+                                        setPageInput(String(page));
+                                    }
+                                }}
+                                keyboardType="number-pad"
+                                selectTextOnFocus
+                                style={{
+                                    color: theme.color.text,
+                                    fontSize: 21,
+                                    fontWeight: '600',
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: theme.color.border,
+                                    minWidth: 32,
+                                    textAlign: 'center',
+                                    paddingVertical: 2,
+                                }} />
+                            {maxPage ? (
+                                <Text style={{ color: theme.color.muted, fontSize: 21 }}>of {maxPage}</Text>
+                            ) : null}
+                        </View>
+                        <Button
+                            iconOnly
+                            size="lg"
+                            disabled={!canNext}
+                            onPress={() => setPage((p) => Math.min(maxPage ?? p + 1, p + 1))}
+                            left={
+                                <MaterialIcons
+                                    name="chevron-right"
+                                    size={24}
+                                    color={canNext ? (theme.color.buttonText?.primary ?? '#fff') : theme.color.muted} />
+                            } />
+                    </View>
+                </>
+            )}
         </View>
     );
 }

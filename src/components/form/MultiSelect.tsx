@@ -2,6 +2,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
     Animated,
+    Dimensions,
     Easing,
     FlatList,
     Modal,
@@ -13,10 +14,13 @@ import {
     View,
     ViewStyle,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
 import type { DropdownOption } from './Dropdown';
 import { makeFormStyles } from './styles';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export type MultiSelectHandle = {
     open: () => void;
@@ -61,9 +65,10 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
     renderOption,
 }: MultiSelectProps<T>, ref: React.Ref<MultiSelectHandle>) {
     const activeTheme = theme ?? useTheme();
+    const insets = useSafeAreaInsets();
     const formStyles = useMemo(() => makeFormStyles(activeTheme), [activeTheme]);
     const [visible, setVisible] = useState(false);
-    const [height, setHeight] = useState(0);
+    const heightRef = useRef(0);
     const opacity = useRef(new Animated.Value(0)).current;
     const sheetY = useRef(new Animated.Value(0)).current;
 
@@ -83,19 +88,19 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
             return;
         }
         opacity.setValue(0);
-        sheetY.setValue(height || 200);
+        sheetY.setValue(heightRef.current || SCREEN_HEIGHT);
         const easeOut = Easing.out(Easing.cubic);
         Animated.parallel([
-            Animated.timing(opacity, { toValue: 1, duration: 180, easing: easeOut, useNativeDriver: true }),
-            Animated.timing(sheetY, { toValue: 0, duration: 220, easing: easeOut, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 1, duration: 180, easing: easeOut, useNativeDriver: false }),
+            Animated.timing(sheetY, { toValue: 0, duration: 220, easing: easeOut, useNativeDriver: false }),
         ]).start();
-    }, [visible, height, opacity, sheetY]);
+    }, [visible, opacity, sheetY]);
 
     const animateOutAnd = (cb: () => void) => {
         const easeIn = Easing.in(Easing.cubic);
         Animated.parallel([
-            Animated.timing(opacity, { toValue: 0, duration: 160, easing: easeIn, useNativeDriver: true }),
-            Animated.timing(sheetY, { toValue: height || 200, duration: 160, easing: easeIn, useNativeDriver: true }),
+            Animated.timing(opacity, { toValue: 0, duration: 160, easing: easeIn, useNativeDriver: false }),
+            Animated.timing(sheetY, { toValue: heightRef.current || SCREEN_HEIGHT, duration: 160, easing: easeIn, useNativeDriver: false }),
         ]).start(({ finished }) => finished && cb());
     };
 
@@ -188,16 +193,16 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                     </View>
                 </TouchableOpacity>
             ) : null}
-            <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
+            <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={close}>
                 <Pressable style={activeTheme.styles.backdropHitbox} onPress={close}>
                     <Animated.View style={[activeTheme.styles.backdrop, { opacity }]} />
                 </Pressable>
                 <Animated.View
-                    onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+                    onLayout={(e) => { heightRef.current = e.nativeEvent.layout.height; }}
                     style={[
                         styles.dropdown,
                         activeTheme.utils.pblg,
-                        { transform: [{ translateY: sheetY }], backgroundColor: activeTheme.color.background },
+                        { transform: [{ translateY: sheetY }], backgroundColor: activeTheme.color.background, paddingBottom: 40 + insets.bottom },
                     ]}>
                     <View style={[styles.dropdownHeader, activeTheme.utils.pxmd, activeTheme.utils.pymd]}>
                         <Text style={[styles.dropdownHeaderText, { color: activeTheme.color.text }]}>{modalTitle}</Text>
@@ -206,6 +211,7 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                         </TouchableOpacity>
                     </View>
                     <FlatList
+                        style={{ flex: 1 }}
                         keyboardShouldPersistTaps="handled"
                         data={options}
                         keyExtractor={(_, idx) => String(idx)}

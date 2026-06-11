@@ -19,6 +19,7 @@ type Props = {
 	logo?: boolean;
 	settings?: boolean;
 	back?: boolean;
+	onBack?: () => void;
 	rightActions?: HeaderAction[];
 	leftContent?: () => React.ReactNode;
 };
@@ -28,6 +29,7 @@ export const Header: React.FC<Props> = ({
 	logo = false,
 	settings = false,
 	back = false,
+	onBack,
 	rightActions = [],
 	leftContent,
 }) => {
@@ -44,7 +46,7 @@ export const Header: React.FC<Props> = ({
 	};
 
 	const goToSettings = () => router.push('/(settings)');
-	const goBack = () => router.back();
+	const goBack = () => onBack ? onBack() : router.back();
 
 	// 🔥 Build default settings action (for backward compatibility)
 	const defaultActions: HeaderAction[] = settings

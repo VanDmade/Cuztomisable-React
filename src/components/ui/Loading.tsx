@@ -69,7 +69,6 @@ export const Loading: React.FC<{
                     localStyles.cog,
                     utils.mbsm,
                     {
-                        backgroundColor: color.background,
                         tintColor: color.secondary,
                         transform: [{ rotate: spinInterpolate }],
                     },

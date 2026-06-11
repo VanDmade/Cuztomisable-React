@@ -50,8 +50,7 @@ export const Footer: React.FC<Props> = ({
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 
-	const frozenBottomInset = useMemo(() => insets.bottom, []);
-	const navHeight = useMemo(() => 66 + frozenBottomInset, [frozenBottomInset]);
+	const navHeight = useMemo(() => 66 + insets.bottom, [insets.bottom]);
 	const plusDropdownRef = useRef<DropdownHandle>(null);
 	const navDropdownRef = useRef<DropdownHandle>(null);
 	const safeItems = useMemo(() => (items ?? []).slice(0, 6), [items]);
@@ -168,7 +167,7 @@ export const Footer: React.FC<Props> = ({
 						height: navHeight,
 						borderTopColor: theme.color.border,
 						borderTopWidth: 1,
-						paddingBottom: frozenBottomInset,
+						paddingBottom: insets.bottom,
 					},
 				]}>
 					{showPlus ? (
