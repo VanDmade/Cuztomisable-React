@@ -15,11 +15,13 @@ type AutocompleteProps<T = any> = {
     value?: string;
     onChangeText?: (text: string) => void;
     onSelect?: (value: T, option: DropdownOption<T>) => void;
+    onCreateNew?: (query: string) => void;
     options: DropdownOption<T>[];
     placeholder?: string;
     minChars?: number;
     clearOnSelect?: boolean;
     fillOnSelect?: boolean;
+    showCreateOption?: boolean;
     filterOption?: (option: DropdownOption<T>, query: string) => boolean;
     containerStyle?: any;
     inputStyle?: any;
@@ -35,11 +37,13 @@ export const FormAutocomplete = <T,>({
     value,
     onChangeText,
     onSelect,
+    onCreateNew,
     options,
     placeholder = 'Search...',
     minChars = 1,
     clearOnSelect = false,
     fillOnSelect = true,
+    showCreateOption = false,
     filterOption,
     containerStyle,
     inputStyle,
@@ -89,6 +93,18 @@ export const FormAutocomplete = <T,>({
         return options.filter((opt) => filter(opt, q));
     }, [options, query, minChars, filterOption, open]);
 
+    const showCreate = showCreateOption && open && query.trim().length >= minChars &&
+        !options.some((opt) => opt.label.toLowerCase() === query.trim().toLowerCase());
+
+    const handleCreate = () => {
+        const q = query.trim();
+        onCreateNew?.(q);
+        if (!onCreateNew) {
+            onChangeText?.(q);
+        }
+        setOpen(false);
+    };
+
     return (
         <View style={[formStyles.wrapper, containerStyle]}>
             {label ? (<Text style={formStyles.label}>{label}</Text>) : null}
@@ -108,7 +124,7 @@ export const FormAutocomplete = <T,>({
             />
             {!hideDetails && helperText ? (<Text style={formStyles.helper}>{helperText}</Text>) : null}
             {!hideDetails && error ? (<Text style={formStyles.error}>{error}</Text>) : null}
-            {filtered.length > 0 ? (
+            {(filtered.length > 0 || showCreate) ? (
                 <View style={[styles.list, { borderColor: activeTheme.color.border, backgroundColor: activeTheme.color.background }]}>
                     <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
                         {filtered.map((item, index) => (
@@ -125,6 +141,15 @@ export const FormAutocomplete = <T,>({
                                 )}
                             </Pressable>
                         ))}
+                        {showCreate && (
+                            <Pressable
+                                onPress={handleCreate}
+                                style={({ pressed }) => [styles.listItem, styles.createItem, { opacity: pressed ? 0.85 : 1 }]}>
+                                <Text style={{ color: activeTheme.color.primary, fontWeight: '500' }}>
+                                    Create: "{query.trim()}"
+                                </Text>
+                            </Pressable>
+                        )}
                     </ScrollView>
                 </View>
             ) : null}
@@ -145,6 +170,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: '#DDD',
+    },
+    createItem: {
+        borderBottomWidth: 0,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: '#DDD',
     },
     description: {
         marginTop: 2,

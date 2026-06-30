@@ -35,7 +35,7 @@ export const makeFormStyles = (theme: Theme) => {
             borderColor: theme.color.danger,
         },
         input: {
-            fontSize: theme.typography.sizes.xs,
+            fontSize: theme.typography.sizes.sm,
             borderWidth: 1,
             borderColor: theme.color.border,
             borderRadius: 10,

@@ -46,6 +46,7 @@ type DropdownProps<T = any> = {
     disabled?: boolean;
     bordered?: boolean;
     containerStyle?: ViewStyle;
+    wrapperStyle?: ViewStyle;
     textStyle?: TextStyle;
     subTextStyle?: TextStyle;
     fieldStyle?: ViewStyle;
@@ -64,6 +65,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
         disabled = false,
         bordered = false,
         containerStyle,
+        wrapperStyle,
         textStyle,
         subTextStyle,
         fieldStyle,
@@ -123,7 +125,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
     const selectedOption = options.find(opt => !opt?.divider && opt?.value === value);
 
     return (
-        <View style={formStyles.wrapper}>
+        <View style={[formStyles.wrapper, wrapperStyle]}>
             {label && (
                 <Text style={formStyles.label}>
                     {label}
@@ -144,14 +146,14 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                         <Text
                             style={[
-                                { color: activeTheme.color.text, flex: 1 },
+                                { color: activeTheme.color.text, flex: 1, fontSize: activeTheme.typography.sizes.sm },
                                 !selectedOption && activeTheme.typography.variants.placeholder,
                                 textStyle,
                             ]}
                             numberOfLines={1}>
                             {selectedOption ? (selectedOption.selectedText ?? selectedOption.label) : placeholder}
                         </Text>
-                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8, flexShrink: 0 }]}>▼</Text>
+                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8, flexShrink: 0, fontSize: activeTheme.typography.sizes.sm }]}>▼</Text>
                     </View>
                 </TouchableOpacity>
             ) : null}

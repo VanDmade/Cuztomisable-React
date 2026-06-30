@@ -22,8 +22,7 @@ export function formatErrorResponse(error: any): FormattedError {
           formErrors[field] = messages[0];
         }
       }
-      // For validation errors we usually show field-level messages only
-      message = '';
+      message = 'Please fix the errors below.';
     } else {
       // Other normalized errors: just use the top-level message
       message = norm.message || message;

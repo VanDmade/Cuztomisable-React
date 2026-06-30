@@ -10,7 +10,7 @@ export default function PrivacyScreen() {
     const config = useConfig();
     const baseText = { color: theme.color.text };
     return (
-        <FormScreen paddingTop="20">
+        <FormScreen paddingTop={20}>
             {() => (
                 <View style={[theme.styles.container, theme.styles.background, theme.utils.pxmd]}>
                     <FormHeader

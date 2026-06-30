@@ -41,9 +41,7 @@ export function Message() {
       return () => clearTimeout(timer);
     }
   }, [visible, autoDuration, clearMessage, slideAnim]);
-  if (!visible) {
-    return null;
-  }
+  if (!visible) return null;
   return (
     <Animated.View style={[
       styles.container,

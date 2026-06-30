@@ -1,12 +1,13 @@
 // src/components/table/DataTable.tsx
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, ScrollView, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { FlatList, ScrollView, Text, TextInput, View, useWindowDimensions, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 import { getApi as api } from '../../api/api';
 import { Dropdown, type DropdownOption } from '../../components/form/Dropdown';
 import { FormInput } from '../../components/form/Input';
 import Button from '../../components/ui/Button';
+import { Loading } from '../../components/ui/Loading';
 import { useTheme } from '../../providers/ThemeProvider';
 import { DataTableRow } from './rows/DataTableRow';
 
@@ -36,6 +37,7 @@ type PaginationMeta = {
     total?: number;
     page?: number;
     perPage?: number;
+    totalPages?: number;
 };
 
 type DataTableProps<T> = {
@@ -111,6 +113,7 @@ export function DataTable<T>({
     filterRows,
 }: DataTableProps<T>) {
     const theme = useTheme();
+    const { height: windowHeight } = useWindowDimensions();
 
     const [rows, setRows] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
@@ -190,6 +193,7 @@ export function DataTable<T>({
                     total: payload.meta?.total ?? 0,
                     page: payload.meta?.page ?? 1,
                     perPage: payload.meta?.perPage ?? 0,
+                    totalPages: payload.meta?.total_pages ?? undefined,
                 });
             } catch (err: any) {
                 if (!active) {
@@ -219,7 +223,7 @@ export function DataTable<T>({
 
     const displayRows = filterRows ? filterRows(rows) : rows;
     const total = meta?.total;
-    const maxPage = total ? Math.max(1, Math.ceil(total / pageSize)) : null;
+    const maxPage = meta?.totalPages ?? (total ? Math.max(1, Math.ceil(total / pageSize)) : null);
     const canPrev = page > 1 && !loading;
     const canNext = !loading && (maxPage ? page < maxPage : rows.length === pageSize);
 
@@ -283,90 +287,91 @@ export function DataTable<T>({
     };
 
     return (
-        <View style={[theme.styles.container, theme.styles.background]}>
+        <View style={[theme.styles.container, theme.styles.background, { flex: 1 }]}>
             <View>
-                {(searchable || filterButton) ? (
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'stretch',
-                            gap: 0,
-                            marginBottom: 12,
-                        }}>
-                        <View style={{ flex: 1 }}>
-                            {searchable ? (
-                                <FormInput
-                                    theme={theme}
-                                    placeholder="Search..."
-                                    value={searchInput}
-                                    onChangeText={setSearchInput}
-                                    hideDetails
-                                    fontSize={18}
-                                    style={[filterButton ? { borderTopRightRadius: 0, borderBottomRightRadius: 0 } : null]}
-                                    inputContainerStyle={{
-                                        borderTopRightRadius: 0,
-                                        borderBottomRightRadius: 0,
-                                    }}
-                                />
-                            ) : null}
-                        </View>
-                        {filterButton ? (<View>{filterButton}</View>) : null}
-                    </View>
-                ) : null}
-                {filters.length > 0 ? (
-                    <View style={[theme.styles.row, { gap: 12, flexWrap: 'wrap' }]}>
-                        {filters.map((filter) => (
-                            <View key={filter.key} style={{ minWidth: 160, flex: 1 }}>
-                                <Dropdown
-                                    theme={theme}
-                                    options={filter.options}
-                                    value={filterValues[filter.key]}
-                                    placeholder={filter.placeholder ?? filter.label}
-                                    onSelect={(val) => {
-                                        setFilterValues((prev) => ({
-                                            ...prev,
-                                            [filter.key]: val,
-                                        }));
-                                    }} />
+                    {(searchable || filterButton) ? (
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'stretch',
+                                gap: 0,
+                                marginBottom: 12,
+                            }}>
+                            <View style={{ flex: 1 }}>
+                                {searchable ? (
+                                    <FormInput
+                                        theme={theme}
+                                        placeholder="Search..."
+                                        value={searchInput}
+                                        onChangeText={setSearchInput}
+                                        hideDetails
+                                        fontSize={18}
+                                        style={[filterButton ? { borderTopRightRadius: 0, borderBottomRightRadius: 0 } : null]}
+                                        inputContainerStyle={{
+                                            borderTopRightRadius: 0,
+                                            borderBottomRightRadius: 0,
+                                        }}
+                                    />
+                                ) : null}
                             </View>
-                        ))}
-                    </View>
-                ) : null}
+                            {filterButton ? (<View>{filterButton}</View>) : null}
+                        </View>
+                    ) : null}
+                    {filters.length > 0 ? (
+                        <View style={[theme.styles.row, { gap: 12, flexWrap: 'wrap' }]}>
+                            {filters.map((filter) => (
+                                <View key={filter.key} style={{ minWidth: 160, flex: 1 }}>
+                                    <Dropdown
+                                        theme={theme}
+                                        options={filter.options}
+                                        value={filterValues[filter.key]}
+                                        placeholder={filter.placeholder ?? filter.label}
+                                        onSelect={(val) => {
+                                            setFilterValues((prev) => ({
+                                                ...prev,
+                                                [filter.key]: val,
+                                            }));
+                                        }} />
+                                </View>
+                            ))}
+                        </View>
+                    ) : null}
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={{ minWidth: '100%' }}>
-                    {showHeader ? renderHeader() : null}
 
-                    {loading ? (
-                        renderLoading ?? (
-                            <View style={[theme.utils.pxmd, theme.utils.pymd]}>
-                                <Text style={{ color: theme.color.muted }}>Loading...</Text>
-                            </View>
-                        )
-                    ) : error ? (
-                        <View style={[theme.utils.pxmd, theme.utils.pymd]}>
-                            <Text style={{ color: theme.color.danger }}>{error}</Text>
-                        </View>
-                    ) : displayRows.length === 0 ? (
-                        <View style={[theme.utils.pxmd, theme.utils.pymd]}>
-                            <Text style={{ color: theme.color.muted }}>No results found.</Text>
-                        </View>
-                    ) : (
-                        <FlatList
-                            data={displayRows}
-                            keyExtractor={(item, index) =>
-                                String(rowKey ? rowKey(item, index) : index)
-                            }
-                            renderItem={({ item, index }) =>
-                                renderRow
-                                    ? renderRow({ item, index, setRows })
-                                    : defaultRenderRow({ item, index })
-                            } />
-                    )}
-                </View>
-            </ScrollView>
-            {!loading && (
+            {loading ? (
+                renderLoading ?? (
+                    <View style={{ height: windowHeight * 0.6, justifyContent: 'center', alignItems: 'center' }}>
+                        <Loading loadingImageSource={theme.image?.loading} />
+                    </View>
+                )
+            ) : (
                 <>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={{ minWidth: '100%' }}>
+                            {showHeader ? renderHeader() : null}
+                            {error ? (
+                                <View style={[theme.utils.pxmd, theme.utils.pymd]}>
+                                    <Text style={{ color: theme.color.danger }}>{error}</Text>
+                                </View>
+                            ) : displayRows.length === 0 ? (
+                                <View style={[theme.utils.pxmd, theme.utils.pymd]}>
+                                    <Text style={{ color: theme.color.muted }}>No results found.</Text>
+                                </View>
+                            ) : (
+                                <FlatList
+                                    data={displayRows}
+                                    keyExtractor={(item, index) =>
+                                        String(rowKey ? rowKey(item, index) : index)
+                                    }
+                                    scrollEnabled={false}
+                                    renderItem={({ item, index }) =>
+                                        renderRow
+                                            ? renderRow({ item, index, setRows })
+                                            : defaultRenderRow({ item, index })
+                                    } />
+                            )}
+                        </View>
+                    </ScrollView>
                     <View style={[theme.utils.ptmd]}>
                         <Dropdown
                             theme={theme}

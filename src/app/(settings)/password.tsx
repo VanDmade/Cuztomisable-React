@@ -31,7 +31,7 @@ export default function PasswordScreen() {
     };
 
     return (
-        <FormScreen paddingTop="20">
+        <FormScreen paddingTop={20}>
             {() => (
                 <View style={[theme.styles.container, theme.styles.background, theme.utils.pxmd]}>
                     <FormHeader

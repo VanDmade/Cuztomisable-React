@@ -2,36 +2,15 @@
   "name": "@vandmade/cuztomisable",
   "version": "1.0.0",
   "description": "A customizable React Native/Expo framework for mobile apps.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "main": "src/index.ts",
+  "source": "src/index.ts",
   "author": "Michael VanDerwerker LLC",
   "license": "MIT",
-  "keywords": [
-    "react-native",
-    "expo",
-    "framework",
-    "customizable",
-    "mobile"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/cuztomisable"
-  },
+  "private": true,
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.71.0",
-    "expo": "*"
-  },
-  "scripts": {
-    "build:watch": "tsc --project tsconfig.build.json --watch"
-  },
-  "devDependencies": {
-    "@types/lodash.merge": "^4.6.9"
-  },
-  "dependencies": {
-    "expo-haptics": "~55.0.14"
+    "expo": "*",
+    "expo-haptics": "*"
   }
 }

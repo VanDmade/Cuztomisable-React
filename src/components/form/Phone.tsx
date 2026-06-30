@@ -115,6 +115,7 @@ export const Phone: React.FC<PhoneProps> = ({
                     styles.row,
                     formStyles.input,
                     utils.pynone,
+                    { alignItems: 'center' },
                     disabled && formStyles.inputDisabled,
                     error && formStyles.errorBorder,
                     style,
@@ -122,10 +123,8 @@ export const Phone: React.FC<PhoneProps> = ({
                 {showCountryCode && options.length > 1 && (
                     <>
                         <Dropdown
-                            fieldStyle={{
-                                ...styles.rowSpaceBetween,
-                                minWidth: 75,
-                            }}
+                            fieldStyle={styles.rowSpaceBetween}
+                            wrapperStyle={{ marginBottom: 0, width: 82 }}
                             modalTitle="Select Country"
                             placeholder="+1"
                             value={internal.countryCode}
@@ -149,8 +148,9 @@ export const Phone: React.FC<PhoneProps> = ({
                             utils.plmd,
                         utils.prmd,
                         {
-                            fontSize: typography.sizes.xs,
+                            fontSize: typography.sizes.sm,
                             color: color.text,
+                            textAlignVertical: 'center',
                         },
                     ]}
                     keyboardType="phone-pad"

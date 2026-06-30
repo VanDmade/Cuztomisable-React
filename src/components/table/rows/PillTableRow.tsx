@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Animated,
     Easing,
+    Image,
     ImageStyle,
+    StyleSheet,
     Text,
     TextStyle,
     TouchableOpacity,
@@ -71,6 +74,8 @@ export function PillTableRow<T>({
     const imageSrc = getImageSource ? getImageSource(item) : undefined;
     const title = getTitle ? getTitle(item) : '';
     const subtitle = getSubtitle ? getSubtitle(item) : undefined;
+    const isUriImage = typeof imageSrc === 'string';
+    const [imageLoading, setImageLoading] = useState(isUriImage);
 
     const [isSwiping, setIsSwiping] = useState(false);
     const [anySwipeOpen, setAnySwipeOpen] = useState(false);
@@ -208,22 +213,23 @@ export function PillTableRow<T>({
                     }} />
 
                 {imageSrc && (
-                    <Animated.Image
-                        source={
-                            typeof imageSrc === 'string'
-                                ? { uri: imageSrc }
-                                : imageSrc
-                        }
-                        style={[
-                            {
-                                width: 48,
-                                height: 48,
-                                borderRadius: 24,
-                                marginRight: 16,
-                                opacity: imageOpacity,
-                            },
-                            imageStyle,
-                        ]}/>
+                    <Animated.View style={[pillImageStyles.container, { opacity: imageOpacity }]}>
+                        {imageLoading && isUriImage && (
+                            <View style={[StyleSheet.absoluteFillObject, pillImageStyles.placeholder, { backgroundColor: theme.color.border }]}>
+                                <ActivityIndicator size="small" color={theme.color.muted} />
+                            </View>
+                        )}
+                        <Image
+                            source={isUriImage ? { uri: imageSrc } : imageSrc}
+                            style={[
+                                pillImageStyles.image,
+                                imageLoading && isUriImage ? { opacity: 0 } : undefined,
+                                imageStyle,
+                            ]}
+                            onLoadStart={() => { if (isUriImage) setImageLoading(true); }}
+                            onLoadEnd={() => setImageLoading(false)}
+                            onError={() => setImageLoading(false)} />
+                    </Animated.View>
                 )}
                 <View style={{ flex: 1 }}>
                     <Animated.View style={{ transform: [{ translateX: titleShift }] }}>
@@ -268,3 +274,22 @@ export function PillTableRow<T>({
         </Animated.View>
     );
 }
+
+const pillImageStyles = StyleSheet.create({
+    container: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 16,
+    },
+    image: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+    },
+    placeholder: {
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});

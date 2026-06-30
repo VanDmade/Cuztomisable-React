@@ -54,7 +54,7 @@ export default function SettingsScreen({ profileImageSource }: { profileImageSou
     const joinDate = '12/25/2025';
 
     return (
-        <FormScreen paddingTop="0">
+        <FormScreen paddingTop="{0}">
             {() => (
                 <ScrollView contentContainerStyle={theme.utils.pbsm}>
                     <View style={[styles.headerRow, theme.utils.pmd]}>

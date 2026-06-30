@@ -61,7 +61,7 @@ return (
         ) : null}
         </View>
         {/* Removed invalid FormToggle without label prop */}
-            {isToggleItem && (<FormToggle label="Toggle" value={toggle} disabled={busy} onValueChange={onToggle} />)}
+            {isToggleItem && (<FormToggle label="" value={toggle} disabled={busy} onValueChange={onToggle} />)}
     </TouchableOpacity>
     );
 };
