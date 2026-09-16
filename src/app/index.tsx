@@ -7,10 +7,12 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useConfig } from '../providers/ConfigProvider';
 import { useTheme } from '../providers/ThemeProvider';
 
 export default function Index() {
     const theme = useTheme();
+    const config = useConfig();
     const { loading: authLoading, signedIn } = useAuth();
     const { loading: obLoading, onboardingComplete } = useOnboarding();
     const booting = authLoading || obLoading;
@@ -37,5 +39,5 @@ export default function Index() {
         return <Redirect href="/(auth)/login" />;
     }
 
-    return <Redirect href="/(tabs)/drinks" />;
+    return <Redirect href={config.homeRoute} />;
 }

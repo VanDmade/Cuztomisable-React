@@ -8,12 +8,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMessage } from '../../contexts/MessageContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 import { useCountdown } from '../../hooks/useCountdown';
+import { useConfig } from '../../providers/ConfigProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
 type Channel = 'email' | 'sms';
 
 export default function MfaScreen() {
     const theme = useTheme();
+    const config = useConfig();
     const router = useRouter();
     const { verifyMfaToken, sendMfaCode, finalizeMfa } = useAuth();
     const { busy, errors, runAction, setErrors } = useAsyncAction();
@@ -64,7 +66,7 @@ export default function MfaScreen() {
         return runAction(async () => {
             const data = await finalizeMfa(token, code);
             showMessage(data.message, 'success');
-            router.replace('/(tabs)/drinks');
+            router.replace(config.homeRoute);
         });
     };
     const onSend = async () => {

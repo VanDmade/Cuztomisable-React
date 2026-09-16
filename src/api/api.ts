@@ -14,6 +14,7 @@ export function getApi(): AxiosInstance {
             : 'Other';
     const api = axios.create({
         baseURL: config.baseUrl,
+        timeout: config.requestTimeoutMs,
         headers: {
             'X-App-Platform': 'mobile',
             'User-Agent': `${config.appName}/${config.version} (${DEVICE_TYPE})`,

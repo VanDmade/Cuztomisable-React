@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigationHistory } from '../../hooks/useNavigationHistory';
+import { useConfig } from '../../providers/ConfigProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
 type HeaderAction = {
@@ -34,14 +35,15 @@ export const Header: React.FC<Props> = ({
 	leftContent,
 }) => {
 	const theme = useTheme();
+	const config = useConfig();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const { pathname } = useNavigationHistory();
 	const { user } = useAuth();
 
 	const goToHome = () => {
-		if (pathname !== '/drinks') {
-			router.push('/(tabs)/drinks');
+		if (pathname !== config.homeRoute) {
+			router.push(config.homeRoute);
 		}
 	};
 

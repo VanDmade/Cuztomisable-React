@@ -7,10 +7,26 @@
   "author": "Michael VanDerwerker LLC",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "postinstall": "node scripts/setup-cuztomisable.js"
+  },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.71.0",
     "expo": "*",
-    "expo-haptics": "*"
+    "expo-haptics": "*",
+    "expo-router": "*",
+    "expo-secure-store": "*",
+    "expo-splash-screen": "*",
+    "expo-document-picker": "*",
+    "expo-image-picker": "*",
+    "@expo/vector-icons": "*",
+    "@react-native-async-storage/async-storage": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-reanimated": "*",
+    "react-native-draggable-flatlist": "*",
+    "axios": "*",
+    "lodash.merge": "*"
   }
 }

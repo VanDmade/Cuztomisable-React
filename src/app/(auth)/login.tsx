@@ -39,7 +39,7 @@ export default function LoginScreen() {
                     params: { token: data.token },
                 });
             } else {
-                router.push({ pathname: '/(tabs)/drinks' });
+                router.push({ pathname: config.homeRoute });
             }
         });
     };

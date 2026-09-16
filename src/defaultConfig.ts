@@ -11,7 +11,9 @@ export const defaultConfig = {
     defaultTheme: 'light' as ThemeMode,
     supportEmail: 'michaelvanderwerkerllc@gmail.com',
     privacyPolicyLastUpdated: '11/21/2025',
-    baseUrl: 'http://192.168.10.147:8000/api/',
+    baseUrl: 'https://api.example.com/api/',
+    requestTimeoutMs: 15000,
+    homeRoute: '/(tabs)/home',
     followSystemTheme: true,
     passwordRequirements: {
         numbers: 1,

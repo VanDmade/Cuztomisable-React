@@ -7,7 +7,7 @@ A React Native / Expo framework for mobile apps. Provides plug-and-play authenti
 ## Table of Contents
 
 - [Installation](#installation)
-- [Metro Configuration](#metro-configuration)
+  - [Peer dependencies](#peer-dependencies)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [Theme Customization](#theme-customization)
@@ -29,70 +29,85 @@ A React Native / Expo framework for mobile apps. Provides plug-and-play authenti
 
 ## Installation
 
-This package is consumed as a local workspace dependency. Add it to your app's `package.json`:
-
-```json
-{
-  "dependencies": {
-    "@vandmade/cuztomisable": "*"
-  }
-}
-```
-
-The package lives at `packages/cuztomisable/` inside the monorepo root. No build step is required — Metro resolves TypeScript source directly.
-
----
-
-## Metro Configuration
-
-Configure Metro to resolve the package alias and watch the local source:
-
-```js
-// metro.config.js
-const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
-
-const config = getDefaultConfig(__dirname);
-
-config.resolver.extraNodeModules = {
-  '@vandmade/cuztomisable': path.resolve(__dirname, 'packages/cuztomisable/src'),
-};
-
-config.watchFolders = [
-  path.resolve(__dirname, 'packages/cuztomisable/src'),
-];
-
-module.exports = config;
-```
-
-After changing package source files, restart Metro with cache cleared:
+This is a source package (no build step - Metro resolves the TypeScript directly), consumed either as a local workspace dependency or, more commonly, straight from GitHub into a standalone Expo app. Because there's no build step, every subpath import below the root (anything other than plain `@vandmade/cuztomisable`) needs a literal `src/` in the path, e.g. `@vandmade/cuztomisable/src/components/form` - the package has no `exports` map, so it's exact-file resolution, not the clean paths you'd get from a published, built package.
 
 ```sh
-npx expo start --clear
+npx create-expo-app@latest MyApp
+cd MyApp
+npm install github:VanDmade/Cuztomisable-React
+```
+
+That's it for the install step. `npm install` (via `postinstall`) automatically:
+
+1. Installs every native module this package needs (Expo Router, Secure Store, Async Storage, gesture handler, reanimated, etc.) via `peerDependencies` - npm 7+ installs those automatically, no separate `expo install` pass required for a fresh app (see [Peer dependencies](#peer-dependencies) if you ever see one missing)
+2. Copies the package's default assets into your project's `assets/` (skips any file that already exists)
+3. Generates `app/_layout.tsx` at your project root wired up with `AppProvider` → `ThemeWrapper` → `MessageProvider` → `AuthProvider` → `Stack` (skipped if you already have one)
+4. Mirrors every screen the package ships (`(auth)`, `(onboarding)`, `(settings)`, `(tabs)`, the root `index.tsx` redirect) into your `app/` directory as one-line re-export files, so `expo-router` picks them up immediately (skipped per-file if you already have that route - override any screen just by not deleting your own version)
+
+After that, you only need to:
+
+```json
+// package.json
+"main": "expo-router/entry"
+```
+
+```json
+// app.json → "expo"
+"scheme": "myapp"
+```
+
+and fill in the generated `app/_layout.tsx`'s `AppProvider config={{}}` with your real config (see [Configuration](#configuration)) - it ships with an empty object on purpose so the app still boots before you've customized anything.
+
+If the generated files ever get out of sync with a newer version of this package (new screens, a changed layout), delete the files you want regenerated and reinstall - `postinstall` won't overwrite anything that already exists.
+
+### Peer dependencies
+
+Everything below is declared in `peerDependencies` and gets installed automatically by `npm install` (npm ≥7). If you're on an older npm, or `npx expo install --fix` ever reports a mismatched version against your Expo SDK, install these explicitly:
+
+```sh
+npx expo install expo-router expo-secure-store expo-splash-screen expo-document-picker \
+  expo-image-picker @expo/vector-icons @react-native-async-storage/async-storage \
+  react-native-gesture-handler react-native-safe-area-context react-native-reanimated \
+  react-native-draggable-flatlist
+npm install axios lodash.merge
 ```
 
 ---
 
 ## Quick Start
 
-```tsx
-import { AppProvider } from '@vandmade/cuztomisable';
-import { createConfig } from '@vandmade/cuztomisable';
+Once installed, `app/_layout.tsx` already exists (generated for you) - just replace its empty config:
 
-const config = createConfig({
+```tsx
+// app/_layout.tsx
+import { AppProvider, AuthProvider, Message, MessageProvider, ThemeWrapper } from '@vandmade/cuztomisable';
+import { Stack } from 'expo-router';
+
+const config = {
   appName: 'My App',
   baseUrl: 'https://api.myapp.com/api/',
   supportEmail: 'hello@myapp.com',
-});
+};
 
-export default function App() {
+export default function RootLayout() {
   return (
     <AppProvider config={config}>
-      {/* your navigation / screens */}
+      <ThemeWrapper>
+        <MessageProvider>
+          <AuthProvider>
+            <Message />
+            <Stack screenOptions={{ headerShown: false }} />
+          </AuthProvider>
+        </MessageProvider>
+      </ThemeWrapper>
     </AppProvider>
   );
 }
 ```
+
+Prefer `createConfig` over a plain object if you only want to override a few keys - it deep-merges onto the package defaults (see [Configuration](#configuration)).
+
+`AppProvider` itself only wraps theme, config, and safe area - `AuthProvider`/`MessageProvider` are separate on purpose (so screens that don't need auth aren't forced to pay for it), which is why the generated layout wires them up explicitly rather than `AppProvider` doing it internally.
 
 ---
 
@@ -112,6 +127,8 @@ const config = createConfig({
   supportEmail: 'help@myapp.com',
   privacyPolicyLastUpdated: '01/01/2026',
   baseUrl: 'https://api.myapp.com/api/',
+  requestTimeoutMs: 15000,   // default - fails fast instead of hanging on a bad baseUrl
+  homeRoute: '/(tabs)/home', // default - where login/MFA/boot land and where the header's home button goes
 
   passwordRequirements: {
     minimum: 8,
@@ -184,9 +201,14 @@ Pass the resulting theme into `ThemeWrapper` or access it anywhere with `useThem
 
 | Export | Description |
 |---|---|
-| `AppProvider` | Root provider — wraps theme, config, auth context, and safe area |
+| `AppProvider` | Root provider — wraps theme, config, and safe area. Does **not** include auth/message state (see below) |
+| `AuthProvider` / `useAuth()` | Signed-in state, login/register/MFA/logout — required by every `(auth)`, `(onboarding)`, and `(tabs)` screen the package ships |
+| `MessageProvider` / `useMessage()` | Toast/banner state, paired with the `<Message />` component rendered once near the root — required by `(auth)/login.tsx` and others |
+| `ConfigProvider` / `useConfig()` | Exposes the config passed to `AppProvider` anywhere in the tree |
 | `ThemeWrapper` | Standalone theme provider when you don't need the full `AppProvider` |
 | `useTheme()` | Hook — returns the active `Theme` object from the nearest provider |
+
+`AuthProvider` and `MessageProvider` are separate from `AppProvider` so screens that don't need them aren't forced to pay for them — the generated `app/_layout.tsx` (see [Installation](#installation)) already wires all of this up for you.
 
 ```tsx
 import { useTheme } from '@vandmade/cuztomisable';
@@ -203,7 +225,7 @@ function MyComponent() {
 
 ### Form Components
 
-Import from `@vandmade/cuztomisable/components/form`:
+Import from `@vandmade/cuztomisable/src/components/form`:
 
 | Component | Description |
 |---|---|
@@ -224,7 +246,7 @@ Import from `@vandmade/cuztomisable/components/form`:
 | `DocumentUploader` | File/document picker |
 
 ```tsx
-import { FormScreen, FormInput, Dropdown } from '@vandmade/cuztomisable/components/form';
+import { FormScreen, FormInput, Dropdown } from '@vandmade/cuztomisable/src/components/form';
 
 <FormScreen paddingTop={20}>
   {() => (
@@ -269,7 +291,7 @@ import { FormScreen, FormInput, Dropdown } from '@vandmade/cuztomisable/componen
 
 ### UI Components
 
-Import from `@vandmade/cuztomisable/components/ui` or the root `@vandmade/cuztomisable`:
+Import from `@vandmade/cuztomisable/src/components/ui` or the root `@vandmade/cuztomisable`:
 
 | Component | Description |
 |---|---|
@@ -379,7 +401,7 @@ All services are pre-wired to the `baseUrl` from your config and handle auth tok
 
 ## Screens & Routes
 
-Pre-built screens are exported from `@vandmade/cuztomisable/app/routes` and can be used directly or overridden by rendering your own component on the same route.
+Pre-built screens are exported from `@vandmade/cuztomisable/src/app/routes` and can be used directly or overridden by rendering your own component on the same route. `npm install` already generated a re-export file per route into your own `app/` directory (see [Installation](#installation)) — editing those, not the ones in `node_modules`, is how you override a screen.
 
 | Export | Route |
 |---|---|
