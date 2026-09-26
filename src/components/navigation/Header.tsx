@@ -18,6 +18,7 @@ type HeaderAction = {
 type Props = {
 	title?: string;
 	logo?: boolean;
+	logoRight?: boolean;
 	settings?: boolean;
 	back?: boolean;
 	onBack?: () => void;
@@ -28,6 +29,7 @@ type Props = {
 export const Header: React.FC<Props> = ({
 	title = null,
 	logo = false,
+	logoRight = false,
 	settings = false,
 	back = false,
 	onBack,
@@ -120,6 +122,13 @@ export const Header: React.FC<Props> = ({
 
 			{/* RIGHT SIDE */}
 			<View style={[theme.styles.row, theme.styles.alignCenter]}>
+				{logoRight && (
+					<Image
+						source={theme.image.logo}
+						style={styles.logoRight}
+						resizeMode="contain"
+					/>
+				)}
 				{actions.map((action, index) => {
 					// 🔥 Custom render override
 					if (action.render) {
@@ -166,5 +175,9 @@ const styles = StyleSheet.create({
 		height: 40,
 		width: 40,
 		borderRadius: 20,
+	},
+	logoRight: {
+		height: 32,
+		width: 32,
 	},
 });

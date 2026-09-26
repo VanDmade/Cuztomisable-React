@@ -1,5 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 
 import {
     finalizeMfa as finalizeMfaService,
@@ -15,6 +16,11 @@ import {
     type SendMfaCodeResponse,
     type VerifyMfaTokenResponse
 } from '../services/auth.service';
+import { get as getUserFromServer } from '../services/user.service';
+import { mapUserToUserDTO } from '../utils/formatters/user';
+
+// Matches the storage key used by auth.service.ts / user.service.ts.
+const USER_STORAGE_KEY = 'user';
 
 type LoginResult = {
     message: string;
@@ -43,6 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<any | null>(null);
 
     const refreshUser = useCallback(async () => {
+        // Fetches fresh data from the server (not just whatever's cached locally
+        // from the last login/save) - otherwise anything changed server-side,
+        // like a profile photo uploaded elsewhere, would never show up here.
+        try {
+            const { user: freshUser } = await getUserFromServer();
+            const mapped = mapUserToUserDTO(freshUser);
+            await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(mapped));
+            setUser(mapped);
+            return;
+        } catch {
+            // Offline or request failed - fall back to whatever's cached locally.
+        }
         const storedUser = await getUser();
         if (storedUser) {
             try {

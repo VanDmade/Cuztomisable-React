@@ -5,9 +5,8 @@ import { View } from 'react-native';
 import { Header } from '../../components/navigation/Header';
 import { SettingsProvider } from '../../contexts/SettingsContext';
 import { useTheme } from '../../providers/ThemeProvider';
-import { imageDefault as themeImages } from '../../theme/images';
 
-export default function SettingsLayout({ logoSource, backImageSource, profileImageSource }: { logoSource?: any, backImageSource?: any, profileImageSource?: any }) {
+export default function SettingsLayout() {
     const theme = useTheme();
 
     return (
@@ -16,9 +15,7 @@ export default function SettingsLayout({ logoSource, backImageSource, profileIma
                 <Header
                     title="Settings"
                     back
-                    logoSource={logoSource || themeImages.logo}
-                    backImageSource={backImageSource || themeImages.back}
-                    profileImageSource={profileImageSource || themeImages.profile}
+                    logoRight
                 />
                 <View style={theme.styles.flex}>
                     <Stack

@@ -84,6 +84,10 @@ export const ImageUploader: React.FC<Props> = ({
             mediaTypes: ['images'],
             allowsMultipleSelection: multiple,
             selectionLimit: maxSelections,
+            // The native crop/rotate editor only supports picking one image at a
+            // time, so it's only available when this uploader is in single mode.
+            allowsEditing: !multiple,
+            aspect: [1, 1],
         });
 
         if (!result.canceled) {
@@ -101,7 +105,11 @@ export const ImageUploader: React.FC<Props> = ({
 
                 onChange(isObjectMode ? next : next.map((i) => i.uri));
             } else {
-                onChange(assets[0] ?? null);
+                // Single mode's `value` contract is a plain string uri (see `list`
+                // above) - passing the picked {id, uri} object here instead nests
+                // it inside source={{ uri: <object> }} on render, which crashes
+                // RCTImageView on Android ("error while updating property source").
+                onChange(assets[0]?.uri ?? null);
             }
         }
     }, [multiple, list, onChange, maxSelections, isObjectMode]);
