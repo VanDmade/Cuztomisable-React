@@ -78,6 +78,9 @@ export default function SettingsScreen({ profileImageSource }: { profileImageSou
                         busy={busy} />
 
                     <ListTitle title="App"></ListTitle>
+                    {(config.settingsItems ?? []).map((item: { title: string; subtitle?: string; href: string }) => (
+                        <ListItem key={item.href} title={item.title} subtitle={item.subtitle} onPress={() => router.push(item.href as any)} />
+                    ))}
                     <ListItem title="Appearance" subtitle={theme.mode.charAt(0).toUpperCase() + theme.mode.slice(1)} onPress={() => router.push('/(settings)/appearance')} />
                     <ListItem title="Rate this App" />
                     <ListItem title="Privacy Policy" subtitle={`Last Updated: ${config.privacyPolicyLastUpdated}`} onPress={() => router.push('/(settings)/privacy')} />

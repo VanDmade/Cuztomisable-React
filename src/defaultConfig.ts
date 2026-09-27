@@ -14,6 +14,8 @@ export const defaultConfig = {
     baseUrl: 'https://api.example.com/api/',
     requestTimeoutMs: 15000,
     homeRoute: '/(tabs)/home',
+    // Extra rows an app adds to Settings > App, each opening one of its own screens,
+    settingsItems: [] as { title: string; subtitle?: string; href: string }[],
     followSystemTheme: true,
     passwordRequirements: {
         numbers: 1,
