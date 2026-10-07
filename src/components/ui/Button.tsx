@@ -322,7 +322,7 @@ export default function Button({
 
                             {loading && (
                                 <ActivityIndicator
-                                    size={preset.fontSize <= 14 ? 'small' : 'large'}
+                                    size="small"
                                     color={spinnerColor ?? computed.foregroundColor}
                                     style={{ marginLeft: 8 }}
                                 />

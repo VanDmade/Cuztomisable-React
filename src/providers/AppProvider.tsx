@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ConfirmHost } from '../components/ui/ConfirmHost';
 import { ConfigProvider } from './ConfigProvider';
 import { ThemeWrapper } from './ThemeWrapper';
 
@@ -15,7 +16,11 @@ export const AppProvider = ({ config, children }: AppProviderProps) => {
         <SafeAreaProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <ConfigProvider config={config}>
-                    <ThemeWrapper>{children}</ThemeWrapper>
+                    <ThemeWrapper>
+                        {children}
+                        {/* Confirm dialogs, drawn over every screen - see components/ui/confirmDialog.ts */}
+                        <ConfirmHost />
+                    </ThemeWrapper>
                 </ConfigProvider>
             </GestureHandlerRootView>
         </SafeAreaProvider>
