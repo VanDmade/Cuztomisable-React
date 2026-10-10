@@ -32,6 +32,13 @@ type Props = {
     defaultImageSource?: any;
     size?: number;
     bordered?: boolean;
+
+    // Single mode only - how the picture is shown: 'circle' (the default - a round avatar, size x size),
+    // 'square' (size x size, slightly rounded corners) or 'rectangle' (full width, height tall - e.g. a photo)
+    shape?: 'circle' | 'square' | 'rectangle';
+    height?: number; // 'rectangle' only - defaults to size
+    // Crop offered after picking (single mode) - null for none. Defaults to square, or none for 'rectangle'.
+    aspect?: [number, number] | null;
 };
 
 export const ImageUploader: React.FC<Props> = ({
@@ -44,9 +51,13 @@ export const ImageUploader: React.FC<Props> = ({
     defaultImageSource,
     size = 120,
     bordered = false,
+    shape = 'circle',
+    height,
+    aspect,
 }) => {
     const theme = useTheme();
     const scrollRef = useRef<ScrollView>(null);
+    const crop = aspect !== undefined ? aspect : shape === 'rectangle' ? null : [1, 1] as [number, number];
 
     const isObjectMode = useMemo(() => {
         return Array.isArray(value) && value.length > 0 && typeof value[0] === 'object';
@@ -86,8 +97,8 @@ export const ImageUploader: React.FC<Props> = ({
             selectionLimit: maxSelections,
             // The native crop/rotate editor only supports picking one image at a
             // time, so it's only available when this uploader is in single mode.
-            allowsEditing: !multiple,
-            aspect: [1, 1],
+            allowsEditing: !multiple && crop !== null,
+            aspect: crop ?? undefined,
         });
 
         if (!result.canceled) {
@@ -112,7 +123,7 @@ export const ImageUploader: React.FC<Props> = ({
                 onChange(assets[0]?.uri ?? null);
             }
         }
-    }, [multiple, list, onChange, maxSelections, isObjectMode]);
+    }, [multiple, list, onChange, maxSelections, isObjectMode, crop]);
 
     const handleRemove = (id: number) => {
         const next = list.filter((i) => i.id !== id);
@@ -134,7 +145,7 @@ export const ImageUploader: React.FC<Props> = ({
         const uri = list[0]?.uri;
 
         return (
-            <View style={styles.singleWrapper}>
+            <View style={[styles.singleWrapper, shape === 'rectangle' && { alignItems: 'stretch' }]}>
                 <View style={styles.singleContainer}>
                     <Pressable onPress={handlePick}>
                         <Image
@@ -145,7 +156,9 @@ export const ImageUploader: React.FC<Props> = ({
                             }
                             style={[
                                 styles.singleImage,
-                                { width: size, height: size, borderRadius: size / 2 },
+                                shape === 'rectangle'
+                                    ? { width: '100%', height: height ?? size, borderRadius: 0 }
+                                    : { width: size, height: size, borderRadius: shape === 'square' ? 8 : size / 2 },
                                 bordered && { borderWidth: 2, borderColor: theme.color.secondary },
                             ]} />
                     </Pressable>
