@@ -190,7 +190,24 @@ export const Footer: React.FC<Props> = ({
 									},
 								]}
 								pointerEvents="box-none">
-								<View
+								{/* The whole circle is the button, not just the icon in it */}
+								<TouchableOpacity
+									activeOpacity={0.8}
+									accessibilityRole="button"
+									onPress={() => {
+										if (fabOnPress) {
+											fabOnPress();
+											return;
+										}
+										if (showPlusDropdown) {
+											plusDropdownRef.current?.open();
+										} else {
+											const route = resolvePlusRoute();
+											if (route) {
+												go(route);
+											}
+										}
+									}}
 									style={[
 										theme.utils.circle64,
 										theme.styles.alignCenter,
@@ -205,22 +222,8 @@ export const Footer: React.FC<Props> = ({
 										name={fabIcon ?? "plus"}
 										size={28}
 										color="#fff"
-										onPress={() => {
-											if (fabOnPress) {
-												fabOnPress();
-												return;
-											}
-											if (showPlusDropdown) {
-												plusDropdownRef.current?.open();
-											} else {
-												const route = resolvePlusRoute();
-												if (route) {
-													go(route);
-												}
-											}
-										}}
 									/>
-								</View>
+								</TouchableOpacity>
 							</View>
 						</View>
 					) : (
