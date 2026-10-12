@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, type ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,6 +18,9 @@ type HeaderAction = {
 type Props = {
 	title?: string;
 	logo?: boolean;
+	// The image for logo (left) - defaults to the theme's logo. Shown 40 tall at its own width, so a wide
+	// banner shows wide rather than squeezed into a square.
+	logoSource?: ImageSourcePropType;
 	logoRight?: boolean;
 	settings?: boolean;
 	back?: boolean;
@@ -29,6 +32,7 @@ type Props = {
 export const Header: React.FC<Props> = ({
 	title = null,
 	logo = false,
+	logoSource,
 	logoRight = false,
 	settings = false,
 	back = false,
@@ -48,6 +52,16 @@ export const Header: React.FC<Props> = ({
 			router.push(config.homeRoute);
 		}
 	};
+
+	// A bundled image's own width for logoSource at the logo's height - square when it can't be told (a URL)
+	const logoSize = (() => {
+		if (!logoSource) {
+			return null;
+		}
+		const asset = Image.resolveAssetSource(logoSource as any);
+		const ratio = asset?.width && asset?.height ? asset.width / asset.height : 1;
+		return { height: styles.item.height, width: styles.item.height * ratio };
+	})();
 
 	const goToSettings = () => router.push('/(settings)');
 	const goBack = () => onBack ? onBack() : router.back();
@@ -89,8 +103,8 @@ export const Header: React.FC<Props> = ({
 						<TouchableOpacity onPress={goToHome} activeOpacity={0.8}>
 							{logo && (
 								<Image
-									source={theme.image.logo}
-									style={styles.item}
+									source={logoSource ?? theme.image.logo}
+									style={logoSize ?? styles.item}
 									resizeMode="contain"
 								/>
 							)}

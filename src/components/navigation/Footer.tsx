@@ -30,6 +30,8 @@ type Props = {
 	dropdownTitle?: string;
 	fabIcon?: IconName;
 	fabOnPress?: () => void;
+	// The current tab's icon and underline - defaults to the theme's secondary colour
+	activeColor?: string;
 };
 
 export const Footer: React.FC<Props> = ({
@@ -45,6 +47,7 @@ export const Footer: React.FC<Props> = ({
 	dropdownTitle = 'Select an option',
 	fabIcon,
 	fabOnPress,
+	activeColor,
 }) => {
 	const theme = useTheme();
 	const router = useRouter();
@@ -118,7 +121,7 @@ export const Footer: React.FC<Props> = ({
 						alignSelf: 'center',
 						width: '70%',
 						height: 3,
-						backgroundColor: theme.color.secondary,
+						backgroundColor: activeColor ?? theme.color.secondary,
 						borderBottomLeftRadius: 2,
 						borderBottomRightRadius: 2,
 					}} />
@@ -126,7 +129,7 @@ export const Footer: React.FC<Props> = ({
 				<MaterialCommunityIcons
 					name={item.icon}
 					size={24}
-					color={isActive ? theme.color.secondary : theme.color.text} />
+					color={isActive ? activeColor ?? theme.color.secondary : theme.color.text} />
 			</TouchableOpacity>
 		);
 	};
