@@ -40,7 +40,9 @@ export type ToggleTwoFactorResponse = {
 };
 
 export async function get(): Promise<GetUserResponse> {
-    const { data } = await api().get('/user');
+    // The "current authenticated user" route is /me - /user/{id} requires an id and is
+    // for looking up a specific other user, not fetching your own profile.
+    const { data } = await api().get('/me');
     if (!data || typeof data !== 'object') {
         throw new Error('Invalid response from server');
     }
