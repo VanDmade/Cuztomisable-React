@@ -154,6 +154,8 @@ export function DataTable<T>({
     const params = useMemo(() => {
         const baseParams: Record<string, any> = {
             page,
+            // The Laravel TableRequest reads `size`; per_page is kept for any API that expects it
+            size: pageSize,
             per_page: pageSize,
         };
         if (searchTerm) {
