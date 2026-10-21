@@ -14,7 +14,7 @@ export const Loading: React.FC<{
     loadingImageSource,
     fullScreen = false,
 }) => {
-    const { color, styles, utils, typography } = useTheme();
+    const { color, styles, utils, typography, image } = useTheme();
 
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -63,8 +63,9 @@ export const Loading: React.FC<{
                 },
                 fullScreen && localStyles.loadingOverlay,
             ]}>
+            {/* Without a source there'd be nothing to see - the theme's loading image is the default */}
             <Animated.Image
-                source={loadingImageSource}
+                source={loadingImageSource ?? image.loading}
                 style={[
                     localStyles.cog,
                     utils.mbsm,
