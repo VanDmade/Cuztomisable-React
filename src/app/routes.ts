@@ -3,6 +3,7 @@
 
 export { default as AuthLayout } from './(auth)/_layout';
 export { default as OnboardingLayout } from './(onboarding)/index';
+export { default as Questionnaire } from './(questionnaire)/index';
 export { default as SettingsLayout } from './(settings)/_layout';
 export { default as TabsLayout } from './(tabs)/_layout';
 

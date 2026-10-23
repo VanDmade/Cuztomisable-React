@@ -9,6 +9,7 @@ type User = {
   phone: any;
   mfa: boolean;
   image: any;
+  questionnaire_completed?: boolean;
 };
 
 function normalizePhone(phone: any): PhoneDTO {
@@ -42,5 +43,7 @@ export function mapUserToUserDTO(user: User): UserDTO {
     phone: normalizePhone(user.phone),
     mfa: Boolean(user.mfa),
     image: normalizeImage(user.image),
+    // Only false sends the user to the questionnaire - a backend without one leaves it out
+    questionnaireCompleted: user.questionnaire_completed !== false,
   };
 }

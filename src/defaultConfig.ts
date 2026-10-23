@@ -72,6 +72,9 @@ export const defaultConfig = {
             description: 'Every screen is designed to be responsive, intuitive, and lightning-fast — right out of the box.',
         },
     ],
+    questionnaire: {
+        followUps: {} as Record<string, { title: string; message?: string; confirmText?: string; cancelText?: string; route: string }>,
+    },
     navigation: {
         items: [],
         enablePlusDropdown: false,
