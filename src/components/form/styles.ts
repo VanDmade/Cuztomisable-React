@@ -1,7 +1,20 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '../../theme/theme';
 
+// Every single-line field - inputs, selects, pickers - is this tall, so fields side by side always line up. Fields that
+// hold more (multi-selects as their chips wrap, textareas) start here and grow.
+export const FIELD_HEIGHT = 49;
+
 export const makeFormStyles = (theme: Theme) => {
+    const inputBase = {
+        fontSize: theme.typography.sizes.sm,
+        borderWidth: 1,
+        borderColor: theme.color.border,
+        borderRadius: 10,
+        paddingHorizontal: 16,
+        color: theme.color.text,
+        backgroundColor: theme.color.surface,
+    };
     return StyleSheet.create({
         wrapper: {
             width: '100%',
@@ -13,9 +26,10 @@ export const makeFormStyles = (theme: Theme) => {
             marginBottom: 6,
             color: theme.color.text,
         },
+        // A toggle's / checkbox's label - the same as a field's label, so a form reads as one set
         inlineLabel: {
-            fontSize: 15,
-            fontWeight: '500',
+            fontSize: 14,
+            fontWeight: '600',
             color: theme.color.text,
         },
         helper: {
@@ -34,14 +48,18 @@ export const makeFormStyles = (theme: Theme) => {
         errorBorder: {
             borderColor: theme.color.danger,
         },
+        // A single-line field: always FIELD_HEIGHT, text centred
         input: {
-            fontSize: theme.typography.sizes.sm,
-            borderWidth: 1,
-            borderColor: theme.color.border,
-            borderRadius: 10,
-            padding: 16,
-            color: theme.color.text,
-            backgroundColor: theme.color.surface,
+            ...inputBase,
+            height: FIELD_HEIGHT,
+            paddingVertical: 0,
+            textAlignVertical: 'center',
+        },
+        // A field that grows with what's in it (textarea, multi-select) - never shorter than a single-line one
+        inputGrowing: {
+            ...inputBase,
+            minHeight: FIELD_HEIGHT,
+            paddingVertical: 14,
         },
         inputDisabled: {
             backgroundColor: theme.color.border,

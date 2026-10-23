@@ -20,6 +20,8 @@ export const color = {
         white: '#FFFFFF',
         border: '#E6E6E6',
         link: '#0A66C2',
+        // Checked checkboxes - leave unset to use primary; set it when primary (the button color) looks wrong on them
+        control: undefined as string | undefined,
         buttonTextColor: '#F1F1F1',
         buttonTextColorInverse: '#1A1A1A',
         buttonText: {
@@ -50,6 +52,7 @@ export const color = {
         white: '#FFFFFF',
         border: '#3A3A3A',
         link: '#64B5F6',
+        control: undefined as string | undefined,
         buttonTextColor: '#1A1A1A',
         buttonTextColorInverse: '#F1F1F1',
         buttonText: {

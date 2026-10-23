@@ -4,3 +4,6 @@ export { Confirm } from './Confirm';
 export { ConfirmHost } from './ConfirmHost';
 export { confirmDialog } from './confirmDialog';
 export type { ConfirmOptions } from './confirmDialog';
+export { KeyboardArea } from './KeyboardArea';
+export { ModalTitle } from './ModalTitle';
+export { StaggerIn } from './StaggerIn';

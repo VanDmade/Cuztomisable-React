@@ -18,7 +18,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
-import { makeFormStyles } from './styles';
+import { FIELD_HEIGHT, makeFormStyles } from './styles';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -29,6 +29,8 @@ export type DropdownOption<T = any> = {
     rightText?: string;
     selectedText?: string;
     divider?: boolean;
+    // Shown as a small circle before the label in a multi-select's list (e.g. a tag's color)
+    color?: string;
 };
 
 export type DropdownHandle = {
@@ -212,7 +214,7 @@ export const Dropdown = forwardRef(function DropdownInner<T = any>(
 
 const styles = StyleSheet.create({
     field: {
-        minHeight: 44,
+        minHeight: FIELD_HEIGHT,
         flexDirection: 'row',
         alignItems: 'center',
     },

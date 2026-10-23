@@ -4,6 +4,7 @@ import { Image, type ImageSourcePropType, StyleSheet, Text, TouchableOpacity, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigateTo } from '../../hooks/useNavigateTo';
 import { useNavigationHistory } from '../../hooks/useNavigationHistory';
 import { useConfig } from '../../providers/ConfigProvider';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -27,6 +28,9 @@ type Props = {
 	onBack?: () => void;
 	rightActions?: HeaderAction[];
 	leftContent?: () => React.ReactNode;
+	// For a bar placed right under it (e.g. FormTabs): leaves off the bottom line (the bar has its own) and the spare
+	// space under the title, so the two sit together as one block
+	borderless?: boolean;
 };
 
 export const Header: React.FC<Props> = ({
@@ -39,6 +43,7 @@ export const Header: React.FC<Props> = ({
 	onBack,
 	rightActions = [],
 	leftContent,
+	borderless = false,
 }) => {
 	const theme = useTheme();
 	const config = useConfig();
@@ -47,9 +52,10 @@ export const Header: React.FC<Props> = ({
 	const { pathname } = useNavigationHistory();
 	const { user } = useAuth();
 
+	const navigateTo = useNavigateTo();
 	const goToHome = () => {
 		if (pathname !== config.homeRoute) {
-			router.push(config.homeRoute);
+			navigateTo(config.homeRoute);
 		}
 	};
 
@@ -63,7 +69,7 @@ export const Header: React.FC<Props> = ({
 		return { height: styles.item.height, width: styles.item.height * ratio };
 	})();
 
-	const goToSettings = () => router.push('/(settings)');
+	const goToSettings = () => navigateTo('/(settings)');
 	const goBack = () => onBack ? onBack() : router.back();
 
 	// 🔥 Build default settings action (for backward compatibility)
@@ -89,11 +95,10 @@ export const Header: React.FC<Props> = ({
 				theme.styles.background,
 				theme.utils.ptlg,
 				theme.utils.pxmd,
-				{
-					height: 66 + insets.top,
-					borderBottomColor: theme.color.border,
-					borderBottomWidth: 1,
-				},
+				borderless
+					// 8 below the status bar, the 40px row, 8 under it
+					? { height: insets.top + 56, paddingTop: insets.top + 8, paddingBottom: 8 }
+					: { height: 66 + insets.top, borderBottomColor: theme.color.border, borderBottomWidth: 1 },
 			]}
 		>
 			{/* LEFT SIDE */}

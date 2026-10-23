@@ -54,7 +54,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
                 textAlignVertical="top"
                 editable={!disabled}
                 style={[
-                    formStyles.input,
+                    formStyles.inputGrowing,
                     { minHeight },
                     disabled && formStyles.inputDisabled,
                     error && formStyles.errorBorder,

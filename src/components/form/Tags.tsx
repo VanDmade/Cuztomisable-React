@@ -1,265 +1,214 @@
 // src/components/form/Tags.tsx
-import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+// Tags for a record: pick any of the existing tags from a list (each with its color), and make a new one with
+// "+ Create tag" - a name, any color from the color picker and a preview. The picked tags show as chips in their colors.
+import React, { useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
+import { getContrastTextColor } from '../../utils/colors';
+import Button from '../ui/Button';
+import { ModalTitle } from '../ui/ModalTitle';
+import { ColorPicker, hsvToHex } from './ColorPicker';
+import { FormInput } from './Input';
+import { FormMultiSelect } from './MultiSelect';
 import { makeFormStyles } from './styles';
 
 export type TagItem = {
+    // An existing tag's id, or "NEW-{n}" for one made here (save it along with its name and color)
     id: string;
     name: string;
     color?: string;
 };
 
+// A new tag starts on a random, clearly colored hue - each one different until it's picked
+const randomColor = () => hsvToHex({ h: Math.random() * 360, s: 0.7, v: 0.9 });
+
 type FormTagsProps = {
     theme?: Theme;
     label?: string;
     placeholder?: string;
-    notes?: string;
     disabled?: boolean;
-    hideDetails?: boolean;
-    minLength?: number;
-    maxLength?: number;
+    // The picked tags - kept whole (not just ids) so new ones keep their name and color until the record is saved
     value: TagItem[];
     onChange: (tags: TagItem[]) => void;
-    errors?: string[];
-    suggestions?: TagItem[];
-    palette?: string[];
+    // The existing tags to pick from
+    options: TagItem[];
+    error?: string;
+    // Show "+ Create tag" (on by default)
+    allowCreate?: boolean;
+    modalTitle?: string;
 };
 
 export const FormTags: React.FC<FormTagsProps> = ({
     theme,
-    label,
-    placeholder = 'Add a tag',
-    notes = 'Press enter once you have entered the name of the tag.',
+    label = 'Tags',
+    placeholder = 'Select tags...',
     disabled = false,
-    hideDetails = false,
-    minLength = 2,
-    maxLength = 32,
     value,
     onChange,
-    errors,
-    suggestions = [],
-    palette,
+    options,
+    error,
+    allowCreate = true,
+    modalTitle = 'Select Tags',
 }) => {
-    const activeTheme = theme ?? useTheme();
+    const contextTheme = useTheme();
+    const activeTheme = theme ?? contextTheme;
     const formStyles = useMemo(() => makeFormStyles(activeTheme), [activeTheme]);
-    const [draftName, setDraftName] = useState('');
-    const [draftColor, setDraftColor] = useState<string | undefined>(palette?.[0]);
-    const [errorList, setErrorList] = useState<string[]>(errors ?? []);
 
-    useEffect(() => {
-        if (errors) {
-            setErrorList(errors);
-        }
-    }, [errors]);
+    const insets = useSafeAreaInsets();
+    const [createVisible, setCreateVisible] = useState(false);
+    // The sheet doesn't scroll while the color is being dragged
+    const [pickingColor, setPickingColor] = useState(false);
+    const [newName, setNewName] = useState('');
+    const [newColor, setNewColor] = useState(randomColor);
 
-    const filteredSuggestions = useMemo(() => {
-        if (!draftName) {
-            return [] as TagItem[];
-        }
-        const q = draftName.toLowerCase();
-        return suggestions.filter((item) => item.name.toLowerCase().includes(q));
-    }, [draftName, suggestions]);
+    // Every tag that can show: the existing ones, plus new ones made here that aren't saved yet
+    const allTags = useMemo(
+        () => [...options, ...value.filter((tag) => !options.some((option) => option.id === tag.id))],
+        [options, value],
+    );
 
-    const generateColor = () => {
-        const colorGenerator = () => Math.floor(256 * Math.random());
-        const rgbToHex = (val: number) => {
-            const hex = val.toString(16);
-            return (hex.length === 1 ? '0' : '') + hex;
-        };
-        return `#${rgbToHex(colorGenerator())}${rgbToHex(colorGenerator())}${rgbToHex(colorGenerator())}`;
+    const openCreate = () => {
+        setNewName('');
+        setNewColor(randomColor());
+        setCreateVisible(true);
     };
 
-    const textColor = (color: string) => {
-        const hex = color.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        return (r * 0.299 + g * 0.587 + b * 0.114) <= 186 ? 'white' : 'black';
-    };
-
-    const resetDraft = () => {
-        setDraftName('');
-        setDraftColor(palette?.[0]);
-    };
-
-    const addTag = (tag?: TagItem) => {
-        setErrorList([]);
-        const name = (tag?.name ?? draftName).trim();
-        if (name.length < minLength) {
-            setErrorList([`The tag must be at least ${minLength} characters long.`]);
+    const createTag = () => {
+        const name = newName.trim();
+        if (!name) {
             return;
         }
-        if (name.length > maxLength) {
-            setErrorList([`The tag must be at most ${maxLength} characters long.`]);
-            return;
+        // A name that's already a tag picks that tag instead of making a second one
+        const existing = allTags.find((tag) => tag.name.trim().toLowerCase() === name.toLowerCase());
+        const tag = existing ?? { id: `NEW-${Date.now()}`, name, color: newColor };
+        if (!value.some((picked) => picked.id === tag.id)) {
+            onChange([...value, tag]);
         }
-        const color = tag?.color ?? draftColor ?? generateColor();
-        const newItem: TagItem = {
-            id: tag?.id ?? `NEW-${Date.now()}`,
-            name,
-            color,
-        };
-        const existingIndex = value.findIndex((item) => item.name.toLowerCase() === name.toLowerCase());
-        const next = [...value];
-        if (existingIndex >= 0) {
-            next.splice(existingIndex, 1);
-        }
-        next.unshift(newItem);
-        onChange(next);
-        resetDraft();
-    };
-
-    const removeTag = (index: number) => {
-        const next = value.filter((_, i) => i !== index);
-        onChange(next);
-    };
-
-    const editTag = (tag: TagItem) => {
-        if (tag.id.startsWith('NEW-')) {
-            setDraftName(tag.name);
-            setDraftColor(tag.color);
-        }
-    };
-
-    const handleSelectSuggestion = (tag: TagItem) => {
-        addTag({ ...tag, id: `EXISTING-${tag.id}` });
+        setCreateVisible(false);
     };
 
     return (
-        <View style={formStyles.wrapper}>
-            {label ? (<Text style={formStyles.label}>{label}</Text>) : null}
-            <View style={styles.inputRow}>
-                <TextInput
-                    value={draftName}
-                    placeholder={placeholder}
-                    placeholderTextColor={activeTheme.color.muted ?? '#AAA'}
-                    editable={!disabled}
-                    style={[
-                        formStyles.input,
-                        styles.flex,
-                        disabled && formStyles.inputDisabled,
-                    ]}
-                    onChangeText={setDraftName}
-                    onSubmitEditing={() => addTag()}
-                />
-                {palette?.length ? (
-                    <View style={styles.palette}>
-                        {palette.map((color) => (
-                            <Pressable
-                                key={color}
-                                onPress={() => setDraftColor(color)}
-                                style={[
-                                    styles.paletteDot,
-                                    { backgroundColor: color, borderColor: activeTheme.color.border },
-                                    draftColor === color && styles.paletteDotActive,
-                                ]}
-                            />
-                        ))}
+        <View>
+            <FormMultiSelect
+                theme={activeTheme}
+                label={label}
+                value={value.map((tag) => tag.id)}
+                onChange={(ids: string[]) => onChange(ids
+                    .map((id) => allTags.find((tag) => tag.id === id))
+                    .filter((tag): tag is TagItem => !!tag))}
+                options={allTags.map((tag) => ({ label: tag.name, value: tag.id, color: tag.color }))}
+                placeholder={placeholder}
+                modalTitle={modalTitle}
+                disabled={disabled}
+                bordered
+                fieldStyle={error ? formStyles.errorBorder : undefined}
+                renderChip={(option) => {
+                    const background = option.color || activeTheme.color.primary;
+                    return (
+                        <View key={String(option.value)} style={[formStyles.chip, { backgroundColor: background }]}>
+                            <Text style={[formStyles.chipText, { color: getContrastTextColor(background) }]}>{option.label}</Text>
+                        </View>
+                    );
+                }} />
+            {error ? <Text style={[formStyles.error, styles.error]}>{error}</Text> : null}
+            {allowCreate && !disabled ? (
+                <TouchableOpacity onPress={openCreate} style={styles.createButton}>
+                    <Text style={{ color: activeTheme.color.link, fontSize: 14 }}>+ Create tag</Text>
+                </TouchableOpacity>
+            ) : null}
+            {/* Drawn under the status and navigation bars, so the sheet reaches the very bottom of the screen */}
+            <Modal
+                visible={createVisible}
+                transparent
+                animationType="slide"
+                statusBarTranslucent
+                navigationBarTranslucent
+                onRequestClose={() => setCreateVisible(false)}>
+                <View style={styles.overlay}>
+                    {/* Tapping the dimmed area above the sheet closes it */}
+                    <Pressable
+                        style={StyleSheet.absoluteFill}
+                        onPress={() => setCreateVisible(false)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Close" />
+                    <View style={[styles.sheet, { backgroundColor: activeTheme.color.surface, paddingBottom: 24 + insets.bottom }]}>
+                        <View style={[styles.sheetTitle, styles.sheetSides]}>
+                            <ModalTitle title="Create Tag" onClose={() => setCreateVisible(false)} />
+                        </View>
+                        <ScrollView
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                            scrollEnabled={!pickingColor}
+                            // The side padding is inside the scroll area, so the color picker's thumb has room at the
+                            // edges instead of being cut off
+                            contentContainerStyle={styles.sheetSides}>
+                            <FormInput
+                                label="Name"
+                                value={newName}
+                                onChangeText={setNewName}
+                                placeholder="e.g. Citrus" />
+                            <Text style={[formStyles.label, { marginTop: 12, marginBottom: 10 }]}>Color</Text>
+                            <ColorPicker theme={activeTheme} value={newColor} onChange={setNewColor} onDragChange={setPickingColor} />
+                            <View style={styles.previewRow}>
+                                <Text style={{ color: activeTheme.color.muted, fontSize: 13 }}>Preview:</Text>
+                                <View style={[formStyles.chip, { backgroundColor: newColor }]}>
+                                    <Text style={[formStyles.chipText, { color: getContrastTextColor(newColor) }]}>
+                                        {newName || 'Tag name'}
+                                    </Text>
+                                </View>
+                            </View>
+                            <View style={{ marginTop: 16 }}>
+                                <Button
+                                    title="Add Tag"
+                                    intent="primary"
+                                    fullWidth
+                                    disabled={!newName.trim()}
+                                    onPress={createTag} />
+                            </View>
+                        </ScrollView>
                     </View>
-                ) : null}
-            </View>
-            {draftName && filteredSuggestions.length > 0 ? (
-                <View style={[styles.suggestions, { borderColor: activeTheme.color.border }]}>
-                    <FlatList
-                        keyboardShouldPersistTaps="handled"
-                        data={filteredSuggestions}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <Pressable
-                                onPress={() => handleSelectSuggestion(item)}
-                                style={({ pressed }) => [
-                                    styles.suggestionRow,
-                                    { opacity: pressed ? 0.85 : 1 },
-                                ]}
-                            >
-                                <Text style={{ color: activeTheme.color.text }}>{item.name}</Text>
-                            </Pressable>
-                        )}
-                    />
                 </View>
-            ) : null}
-            {notes ? (<Text style={formStyles.helper}>{notes}</Text>) : null}
-            {!hideDetails && errorList.length > 0 ? (
-                <View style={styles.errorList}>
-                    {errorList.map((err, index) => (
-                        <Text key={`${index}-${err}`} style={formStyles.error}>{err}</Text>
-                    ))}
-                </View>
-            ) : null}
-            {value.length > 0 ? (
-                <View style={styles.tags}>
-                    {value.map((tag, index) => (
-                        <Pressable
-                            key={`${tag.id}-${index}`}
-                            style={[
-                                formStyles.chip,
-                                { backgroundColor: tag.color ?? activeTheme.color.primary },
-                            ]}
-                            onPress={() => editTag(tag)}
-                        >
-                            <Text
-                                style={[
-                                    formStyles.chipText,
-                                    { color: tag.color ? textColor(tag.color) : 'white' },
-                                ]}
-                            >
-                                {tag.name}
-                            </Text>
-                            <Pressable onPress={() => removeTag(index)}>
-                                <Text style={[formStyles.chipRemove, { color: 'white' }]}>×</Text>
-                            </Pressable>
-                        </Pressable>
-                    ))}
-                </View>
-            ) : null}
+            </Modal>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    inputRow: {
+    error: {
+        marginTop: -8,
+        marginBottom: 8,
+    },
+    createButton: {
+        alignSelf: 'flex-start',
+        paddingVertical: 8,
+        paddingHorizontal: 2,
+        marginTop: 4,
+        marginBottom: 8,
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'flex-end',
+    },
+    sheet: {
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingTop: 24,
+        maxHeight: '85%',
+    },
+    sheetSides: {
+        paddingHorizontal: 24,
+    },
+    sheetTitle: {
+        marginBottom: 16,
+    },
+    previewRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-    },
-    flex: {
-        flex: 1,
-    },
-    palette: {
-        flexDirection: 'row',
-        gap: 6,
-        marginLeft: 8,
-    },
-    paletteDot: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 1,
-    },
-    paletteDotActive: {
-        borderWidth: 2,
-    },
-    suggestions: {
-        marginTop: 6,
-        borderWidth: 1,
-        borderRadius: 10,
-        overflow: 'hidden',
-        maxHeight: 160,
-    },
-    suggestionRow: {
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: '#DDD',
-    },
-    errorList: {
-        marginTop: 6,
-    },
-    tags: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 8,
+        gap: 10,
+        marginTop: 16,
+        marginBottom: 4,
     },
 });

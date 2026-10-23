@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMessage } from '../../contexts/MessageContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
+import { useNavigateTo } from '../../hooks/useNavigateTo';
 import { useConfig } from '../../providers/ConfigProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 import { imageDefault as themeImages } from '../../theme/images';
@@ -16,6 +17,7 @@ export default function SettingsScreen({ profileImageSource }: { profileImageSou
     const theme = useTheme();
     const config = useConfig();
     const router = useRouter();
+    const navigateTo = useNavigateTo();
     const { busy, runAction } = useAsyncAction();
     const { showMessage } = useMessage();
     const { user, refreshUser, logout } = useAuth();
@@ -68,8 +70,8 @@ export default function SettingsScreen({ profileImageSource }: { profileImageSou
                         </View>
                     </View>
                     <ListTitle title="My Account"></ListTitle>
-                    <ListItem title="Edit Profile" onPress={() => router.push('/(settings)/profile')} />
-                    <ListItem title="Change Password" onPress={() => router.push('/(settings)/password')} />
+                    <ListItem title="Edit Profile" onPress={() => navigateTo('/(settings)/profile')} />
+                    <ListItem title="Change Password" onPress={() => navigateTo('/(settings)/password')} />
                     <ListItem
                         title="Two Factor Authentication"
                         subtitle={twoFactor ? 'Enabled' : 'Disabled'}
@@ -79,12 +81,12 @@ export default function SettingsScreen({ profileImageSource }: { profileImageSou
 
                     <ListTitle title="App"></ListTitle>
                     {(config.settingsItems ?? []).map((item: { title: string; subtitle?: string; href: string }) => (
-                        <ListItem key={item.href} title={item.title} subtitle={item.subtitle} onPress={() => router.push(item.href as any)} />
+                        <ListItem key={item.href} title={item.title} subtitle={item.subtitle} onPress={() => navigateTo(item.href)} />
                     ))}
-                    <ListItem title="Appearance" subtitle={theme.mode.charAt(0).toUpperCase() + theme.mode.slice(1)} onPress={() => router.push('/(settings)/appearance')} />
+                    <ListItem title="Appearance" subtitle={theme.mode.charAt(0).toUpperCase() + theme.mode.slice(1)} onPress={() => navigateTo('/(settings)/appearance')} />
                     <ListItem title="Rate this App" />
-                    <ListItem title="Privacy Policy" subtitle={`Last Updated: ${config.privacyPolicyLastUpdated}`} onPress={() => router.push('/(settings)/privacy')} />
-                    <ListItem title={`About ${config.appName}`} onPress={() => router.push('/(settings)/about')} />
+                    <ListItem title="Privacy Policy" subtitle={`Last Updated: ${config.privacyPolicyLastUpdated}`} onPress={() => navigateTo('/(settings)/privacy')} />
+                    <ListItem title={`About ${config.appName}`} onPress={() => navigateTo('/(settings)/about')} />
                     <ListItem title={`Version: ${config.version ?? '1.0.0'}`} />
 
                     <ListTitle title="Account Actions"></ListTitle>

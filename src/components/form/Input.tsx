@@ -71,7 +71,7 @@ export const FormInput: React.FC<FormInputProps> = ({
                 autoCapitalize={capitalOnly ? 'characters' : 'none'}
                 editable={!disabled}
                 style={[
-                    formStyles.input,
+                    inputProps.multiline ? [formStyles.inputGrowing, { textAlignVertical: 'top' as const }] : formStyles.input,
                     disabled && formStyles.inputDisabled,
                     error && formStyles.errorBorder,
                     fontSize ? { fontSize } : null,

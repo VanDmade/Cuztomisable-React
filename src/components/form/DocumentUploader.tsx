@@ -139,7 +139,6 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
 const styles = StyleSheet.create({
     pickButton: {
-        minHeight: 48,
         justifyContent: 'center',
     },
     list: {

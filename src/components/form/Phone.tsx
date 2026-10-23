@@ -113,7 +113,7 @@ export const Phone: React.FC<PhoneProps> = ({
             <View
                 style={[
                     styles.row,
-                    formStyles.input,
+                    formStyles.inputGrowing,
                     utils.pynone,
                     { alignItems: 'center' },
                     disabled && formStyles.inputDisabled,

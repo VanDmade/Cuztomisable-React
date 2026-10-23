@@ -26,6 +26,7 @@
     "react-native-safe-area-context": "*",
     "react-native-reanimated": "*",
     "react-native-draggable-flatlist": "*",
+    "react-native-svg": "*",
     "axios": "*",
     "lodash.merge": "*"
   }

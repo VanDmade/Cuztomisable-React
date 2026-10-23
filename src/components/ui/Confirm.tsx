@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Button from './Button';
 import { hasHost, hideControlled, showControlled, type ConfirmIntent } from './confirmDialog';
 
@@ -65,6 +65,8 @@ export function Confirm({
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <View style={[StyleSheet.absoluteFill, confirmStyles.overlay]}>
+                {/* Tapping the dimmed area around it is the same as cancelling */}
+                <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityRole="button" accessibilityLabel="Cancel" />
                 <ConfirmCard
                     theme={theme}
                     title={title}
@@ -161,17 +163,17 @@ export const confirmStyles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        textAlign: 'center',
+        textAlign: 'left',
         marginBottom: 6,
     },
     subtitle: {
         fontSize: 14,
-        textAlign: 'center',
+        textAlign: 'left',
         marginBottom: 8,
     },
     message: {
         fontSize: 14,
-        textAlign: 'center',
+        textAlign: 'left',
         marginBottom: 16,
     },
     actions: {

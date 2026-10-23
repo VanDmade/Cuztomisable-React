@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 
 import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { StaggerIn } from '../../ui/StaggerIn';
 
 export type PillTableRowProps<T> = {
     item: T;
@@ -86,29 +87,6 @@ export function PillTableRow<T>({
     const flashOpacity = useRef(new Animated.Value(0)).current;
     const [activeFlashColor, setActiveFlashColor] = useState('transparent');
 
-    const enterY = useRef(new Animated.Value(-20)).current;
-    const enterOpacity = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        const delay = Math.min(index, 8) * 60;
-        Animated.parallel([
-            Animated.timing(enterY, {
-                toValue: 0,
-                duration: 320,
-                delay,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            Animated.timing(enterOpacity, {
-                toValue: 1,
-                duration: 280,
-                delay,
-                easing: Easing.out(Easing.ease),
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
-
     const runFlash = (color: string, intensity: number, inMs: number, outMs: number) => {
         setActiveFlashColor(color);
         flashOpacity.setValue(0);
@@ -141,7 +119,7 @@ export function PillTableRow<T>({
     const borderRadius = anySwipeOpen ? 0 : 12;
 
     return (
-        <Animated.View style={{ opacity: enterOpacity, transform: [{ translateY: enterY }] }}>
+        <StaggerIn index={index}>
         <Swipeable
             ref={swipeRef}
             renderLeftActions={
@@ -271,7 +249,7 @@ export function PillTableRow<T>({
                 )}
             </RowComponent>
         </Swipeable>
-        </Animated.View>
+        </StaggerIn>
     );
 }
 

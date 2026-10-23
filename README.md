@@ -193,6 +193,8 @@ const theme = createTheme('light', {
 });
 ```
 
+Optional `color.control` sets the color of checked checkboxes; leave it out to use `primary`. Set it when the primary (button) color looks off on them.
+
 Pass the resulting theme into `ThemeWrapper` or access it anywhere with `useTheme()`.
 
 ---
@@ -229,19 +231,24 @@ Import from `@vandmade/cuztomisable/src/components/form`:
 
 | Component | Description |
 |---|---|
-| `FormScreen` | Scrollable screen wrapper with safe area, keyboard avoidance, and optional top padding |
+| `FormSaveBar` | A Save button pinned to the bottom of the screen, below the scrolling form (clears the home indicator). `before` / `after` add another button to its left / right, e.g. a + |
+| `FormTabs` | A form's sections as underline tabs (the line slides to the open one), with a red error count per tab (`errorCounts`). Put it under a `TopNav` with `borderless` so they share one divider |
+| `ErrorAnchor` | Marks a spot a FormScreen can scroll to - provide `ErrorFocusContext` with `{ anchor, request }` to jump to the first error |
+| `FormScreen` | Scrollable screen wrapper with safe area, keyboard avoidance, and optional top padding. Fields inside can call `useFormScroll()?.scrollToView(ref.current)` to bring themselves into view (e.g. the first error). The keyboard stays open while scrolling and closes on a tap on empty space (`keyboardDismissMode` `on-drag` / `interactive` closes it on scroll instead). `scrollEnabled={false}` pauses scrolling, e.g. while a `ColorPicker` is dragged |
 | `FormHeader` | Section header with title, subtitle, and optional right-side content slot |
+| `FIELD_HEIGHT` | The height every single-line field uses (49) - inputs, selects, pickers. Multi-selects and textareas start at it and grow. Use it for any custom field so they line up |
 | `FormInput` | Single-line text input with label, error state, and animated error message |
 | `FormTextarea` | Multi-line text input |
 | `Dropdown` | Bottom-sheet picker for a list of options; supports `wrapperStyle` and `fieldStyle` overrides |
 | `FormAutocomplete` | Searchable dropdown with typeahead filtering |
 | `Phone` | Phone number input with country-code selector |
-| `FormCheckbox` | Checkbox with label |
+| `FormCheckbox` | Checkbox with label - checked in the theme's `control` color, or `primary` |
 | `FormToggle` | On/off toggle switch |
 | `FormRadio` | Radio button group |
 | `FormMultiSelect` | Multi-select pill chooser |
 | `FormMultiEntry` | Add/remove a list of free-text entries |
-| `FormTags` | Tag input field |
+| `ColorPicker` | Any color: a saturation/brightness square and a hue bar, with optional one-tap `presets` (needs `react-native-svg`). The drag circles reach the edges, so leave ~11px of room around it (e.g. a scroll view's padding, not its parent's) |
+| `FormTags` | Tags for a record - pick existing tags from a list (`options`, each shown with its color) or add one with "+ Create tag" (name, any color via `ColorPicker`, preview). `value` holds whole tags so new `NEW-…` ones keep their name and color until saved |
 | `ImageUploader` | Image picker with preview |
 | `DocumentUploader` | File/document picker |
 
@@ -297,6 +304,9 @@ Import from `@vandmade/cuztomisable/src/components/ui` or the root `@vandmade/cu
 |---|---|
 | `Button` | Themed button with `intent`, `size`, `iconOnly`, `left`/`right` icon slots |
 | `Message` | Inline alert/banner with `type` (`success`, `error`, `warning`, `info`) and `visible` flag |
+| `StaggerIn` | A list row's entrance - drops in and fades, each row (`index`) a beat after the last. `PillTableRow` uses it |
+| `KeyboardArea` | An area that shrinks to stay above the keyboard wherever it sits on screen (under a header, tabs). `FormScreen` uses it; wrap a list with an inline form in it too |
+| `ModalTitle` | A modal's title, on the left, with a close (X) button in the corner |
 | `Loading` | Full-screen or inline loading spinner |
 | `LinkText` | Styled pressable text link |
 | `PasswordRequirements` | Visual checklist for password strength rules |
@@ -352,7 +362,7 @@ const columns: DataTableColumn[] = [
 | Component | Description |
 |---|---|
 | `BottomNav` | Tab bar footer with configurable nav items and optional plus-action dropdown |
-| `TopNav` | Screen header with back button, title, and right-action slot |
+| `TopNav` | Screen header with back button, title, and right-action slot. `borderless` is for a bar placed right under it (e.g. `FormTabs`): it drops the bottom line and the spare space under the title |
 
 ---
 
@@ -374,6 +384,7 @@ const columns: DataTableColumn[] = [
 | `useCountdown(seconds)` | Countdown timer that ticks down from a given value |
 | `useFirstLaunch()` | Returns `true` on the first app launch (persisted via AsyncStorage) |
 | `useNavigationHistory()` | Tracks the navigation stack for custom back-button behaviour |
+| `useNavigateTo()` | Returns `navigateTo(href)` - goes back to a page already in the history instead of opening it a second time (otherwise pushes). The header, footer and Settings list use it, so Back never shows the same page twice |
 | `useOnboarding()` | Manages onboarding completion state |
 
 ```ts

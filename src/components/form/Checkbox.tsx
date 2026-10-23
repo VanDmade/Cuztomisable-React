@@ -46,6 +46,9 @@ export const FormCheckbox: React.FC<FormCheckboxProps> = ({
 
     const Wrapper = fullWidthPressable ? Pressable : View;
 
+    // The theme's control color when it has one, otherwise primary
+    const checkedColor = theme.color.control || theme.color.primary;
+
     return (
         <View style={styles.container}>
             <Wrapper
@@ -65,8 +68,8 @@ export const FormCheckbox: React.FC<FormCheckboxProps> = ({
                     style={({ pressed }) => [
                         styles.box,
                         {
-                             borderColor: hasError ? theme.color.danger : theme.color.border ?? '#CCC',
-                            backgroundColor: value ? theme.color.primary : theme.color.background,
+                            borderColor: hasError ? theme.color.danger : value ? checkedColor : theme.color.border ?? '#CCC',
+                            backgroundColor: value ? checkedColor : theme.color.background,
                             opacity: pressed && !disabled ? 0.9 : 1,
                         },
                     ]}>
@@ -74,7 +77,7 @@ export const FormCheckbox: React.FC<FormCheckboxProps> = ({
                         <MaterialIcons
                             name="check"
                             size={16}
-                            color={theme.color.buttonText.primary ?? '#fff'}
+                            color={theme.color.white ?? '#fff'}
                         />
                     )}
                 </Pressable>

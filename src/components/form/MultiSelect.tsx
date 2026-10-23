@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { Theme } from '../../theme/theme';
 import type { DropdownOption } from './Dropdown';
-import { makeFormStyles } from './styles';
+import { FIELD_HEIGHT, makeFormStyles } from './styles';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -139,9 +139,8 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                     style={[
                         styles.field,
                         activeTheme.utils.pxsm,
-                        !atLeastOneSelected && { paddingVertical: 16 },
-                        atLeastOneSelected && { paddingBottom: 10, paddingTop: 10 },
-                        bordered && [{ borderWidth: 1, borderColor: activeTheme.color.border }, formStyles.input, activeTheme.utils.pxmd],
+                        bordered && [{ borderWidth: 1, borderColor: activeTheme.color.border }, formStyles.inputGrowing, activeTheme.utils.pxmd],
+                        { minHeight: FIELD_HEIGHT, paddingVertical: 8 },
                         fieldStyle,
                         containerStyle,
                         disabled && formStyles.inputDisabled,
@@ -227,7 +226,10 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                                         selected && activeTheme.styles.rowSelected,
                                     ]}
                                     onPress={() => toggleValue(item.value)}>
-                                    <View style={activeTheme.styles.rowLeft}>
+                                    {!!item.color && (
+                                        <View style={[styles.colorDot, { backgroundColor: item.color, borderColor: activeTheme.color.border }]} />
+                                    )}
+                                    <View style={[activeTheme.styles.rowLeft, !!item.color && { flex: 1 }]}>
                                         <Text style={[activeTheme.styles.rowLabel, { color: activeTheme.color.text }]}>{item.label}</Text>
                                         {!!item.description && (
                                             <Text style={[activeTheme.styles.rowDesc, { color: activeTheme.color.muted }]}>{item.description}</Text>
@@ -274,5 +276,13 @@ const styles = StyleSheet.create({
     dropdownHeaderText: {
         fontWeight: '600',
         fontSize: 16,
+    },
+    // An option's color, with a hairline so white or very pale colors still show
+    colorDot: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        borderWidth: StyleSheet.hairlineWidth,
+        marginRight: 10,
     },
 });

@@ -4,6 +4,7 @@ import React, { useMemo, useRef } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNavigateTo } from '../../hooks/useNavigateTo';
 import { useTheme } from '../../providers/ThemeProvider';
 
 import { Dropdown, type DropdownHandle, type DropdownOption } from '../../components/form/Dropdown';
@@ -86,7 +87,9 @@ export const Footer: React.FC<Props> = ({
 		[safeItems]
 	);
 
-	const go = (path: string) => router.push(path as any);
+	// A tab already open further back is returned to, not opened a second time
+	const navigateTo = useNavigateTo();
+	const go = (path: string) => navigateTo(path);
 	const resolvePlusRoute = () => {
 		if (activeKey && plusActionRoutes?.[activeKey]) {
 			return plusActionRoutes[activeKey];
