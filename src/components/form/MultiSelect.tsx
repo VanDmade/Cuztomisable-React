@@ -176,9 +176,10 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                                     ))}
                                 </View>
                             ) : (
+                                // The same size and color as every other field's placeholder
                                 <Text
                                     style={[
-                                        { color: activeTheme.color.text },
+                                        { color: activeTheme.color.text, fontSize: activeTheme.typography.sizes.sm },
                                         activeTheme.typography.variants.placeholder,
                                         textStyle,
                                     ]}
@@ -188,7 +189,7 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
                             )}
                             {/* Example usage: atLeastOneSelected ? ... : ... */}
                         </View>
-                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8 }]}>▼</Text>
+                        <Text style={[activeTheme.styles.chevron, textStyle, { marginLeft: 8, flexShrink: 0, fontSize: activeTheme.typography.sizes.sm }]}>▼</Text>
                     </View>
                 </TouchableOpacity>
             ) : null}
@@ -248,10 +249,11 @@ export const FormMultiSelect = forwardRef(function FormMultiSelectInner<T = any>
 }) as <T = any>(p: MultiSelectProps<T> & { ref?: React.Ref<MultiSelectHandle> }) => React.ReactElement;
 
 const styles = StyleSheet.create({
+    // No wrapping here - the chips wrap inside their own row. A wrapping field packs its content to the top, which
+    // left the placeholder sitting high instead of centred like every other select
     field: {
         flexDirection: 'row',
         alignItems: 'center',
-        flexWrap: 'wrap',
     },
     chips: {
         flexDirection: 'row',

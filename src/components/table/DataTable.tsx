@@ -69,6 +69,13 @@ type DataTableProps<T> = {
 
 const DEFAULT_PAGE_SIZES = [10, 25, 50];
 
+// What the rows sit in: a sideways scroll for column tables, a plain full-width box for rows drawn by the screen
+function RowsFrame({ sideways, children }: { sideways: boolean; children: React.ReactNode }) {
+    return sideways
+        ? <ScrollView horizontal showsHorizontalScrollIndicator={false}>{children}</ScrollView>
+        : <View>{children}</View>;
+}
+
 function extractRows<T>(payload: any): { rows: T[]; meta?: PaginationMeta } {
     if (!payload) {
         return { rows: [] };
@@ -348,7 +355,10 @@ export function DataTable<T>({
                 )
             ) : (
                 <>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {/* Column tables can be wider than the screen, so they scroll sideways. Rows a screen draws itself
+                        (renderRow - e.g. pills) get exactly the width there is, so long text inside them cuts off
+                        instead of pushing the row past the edge */}
+                    <RowsFrame sideways={!renderRow}>
                         <View style={{ minWidth: '100%' }}>
                             {showHeader ? renderHeader() : null}
                             {error ? (
@@ -373,7 +383,7 @@ export function DataTable<T>({
                                     } />
                             )}
                         </View>
-                    </ScrollView>
+                    </RowsFrame>
                     <View style={[theme.utils.ptmd]}>
                         <Dropdown
                             theme={theme}

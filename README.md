@@ -305,6 +305,7 @@ Import from `@vandmade/cuztomisable/src/components/ui` or the root `@vandmade/cu
 | `Button` | Themed button with `intent`, `size`, `iconOnly`, `left`/`right` icon slots |
 | `Message` | Inline alert/banner with `type` (`success`, `error`, `warning`, `info`) and `visible` flag |
 | `StaggerIn` | A list row's entrance - drops in and fades, each row (`index`) a beat after the last. `PillTableRow` uses it |
+| `GrowIn` | Opens its content from nothing (grows to full height and fades in) so a banner that turns up pushes the page down smoothly |
 | `KeyboardArea` | An area that shrinks to stay above the keyboard wherever it sits on screen (under a header, tabs). `FormScreen` uses it; wrap a list with an inline form in it too |
 | `ModalTitle` | A modal's title, on the left, with a close (X) button in the corner |
 | `Loading` | Full-screen or inline loading spinner |

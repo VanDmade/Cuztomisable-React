@@ -4,6 +4,7 @@ export { Confirm } from './Confirm';
 export { ConfirmHost } from './ConfirmHost';
 export { confirmDialog } from './confirmDialog';
 export type { ConfirmOptions } from './confirmDialog';
+export { GrowIn } from './GrowIn';
 export { KeyboardArea } from './KeyboardArea';
 export { ModalTitle } from './ModalTitle';
 export { StaggerIn } from './StaggerIn';
