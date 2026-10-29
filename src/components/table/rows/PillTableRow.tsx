@@ -98,13 +98,20 @@ export function PillTableRow<T>({
 
     const isMounted = useRef(false);
     useEffect(() => {
-        if (!isMounted.current) { isMounted.current = true; return; }
-        if (!flashTrigger || !flashColor) return;
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+        if (!flashTrigger || !flashColor) {
+            return;
+        }
         runFlash(flashColor, 1, 150, 750);
     }, [flashTrigger]);
 
     useEffect(() => {
-        if (!closeTrigger) return;
+        if (!closeTrigger) {
+            return;
+        }
         swipeRef.current?.close();
     }, [closeTrigger]);
 
@@ -148,7 +155,9 @@ export function PillTableRow<T>({
                     springTitle(leftActionsOffset);
                     Animated.timing(imageOpacity, { toValue: 0, duration: 120, useNativeDriver: true }).start();
                 } else {
-                    if (rightActionsOffset) springTitle(-rightActionsOffset);
+                    if (rightActionsOffset) {
+                        springTitle(-rightActionsOffset);
+                    }
                 }
             }}
             onSwipeableWillClose={() => {

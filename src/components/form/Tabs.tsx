@@ -28,7 +28,9 @@ export function FormTabs<K extends string = string>({ tabs, tab, onPress, errorC
     const position = useRef(new Animated.Value(0)).current;
     const placed = useRef(false);
     useEffect(() => {
-        if (!tabWidth) return;
+        if (!tabWidth) {
+            return;
+        }
         const toValue = index * tabWidth;
         if (!placed.current) {
             // First layout: start under the open tab rather than sliding in from the left

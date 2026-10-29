@@ -29,7 +29,9 @@ export default function MfaScreen() {
     const [sent, setSent] = useState(false);
 
     useEffect(() => {
-        if (!token) return;
+        if (!token) {
+            return;
+        }
 
         let mounted = true;
 
@@ -37,7 +39,9 @@ export default function MfaScreen() {
             try {
                 const data = await verifyMfaToken(token);
 
-                if (!mounted) return;
+                if (!mounted) {
+                    return;
+                }
 
                 if (data.email == null || data.phone == null) {
                     setSent(true);
@@ -50,7 +54,9 @@ export default function MfaScreen() {
                 setEmail(data.email);
                 setPhone(data.phone);
             } catch (err: any) {
-                if (!mounted) return;
+                if (!mounted) {
+                    return;
+                }
                 showMessage(err?.message ?? 'Invalid or expired token', 'danger');
             }
         };

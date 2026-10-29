@@ -40,7 +40,9 @@ export const FormCheckbox: React.FC<FormCheckboxProps> = ({
     const errorText = Array.isArray(error) ? error.join('\n') : error;
 
     const handlePress = (e: GestureResponderEvent) => {
-    if (disabled) return;
+    if (disabled) {
+        return;
+    }
     onValueChange(!value);
     };
 

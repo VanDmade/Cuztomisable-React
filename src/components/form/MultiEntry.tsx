@@ -76,7 +76,9 @@ export const FormMultiEntry = <T extends MultiEntryItem>({
     const [counter, setCounter] = useState(0);
 
     useEffect(() => {
-        if (startWithOne && value.length === 0) handleAdd();
+        if (startWithOne && value.length === 0) {
+            handleAdd();
+        }
     }, []);
 
     const setValue = (next: T[]) => onChange(next);
@@ -90,7 +92,9 @@ export const FormMultiEntry = <T extends MultiEntryItem>({
     };
 
     const handleRemove = (index: number, force = false) => {
-        if (!removeAll && value.length === 1) return;
+        if (!removeAll && value.length === 1) {
+            return;
+        }
         if (force) {
             const next = [...value];
             next.splice(index, 1);
@@ -114,14 +118,18 @@ export const FormMultiEntry = <T extends MultiEntryItem>({
     };
 
     const reorderUp = (index: number) => {
-        if (index === 0) return;
+        if (index === 0) {
+            return;
+        }
         const next = [...value];
         [next[index - 1], next[index]] = [next[index], next[index - 1]];
         setValue(next);
     };
 
     const reorderDown = (index: number) => {
-        if (index === value.length - 1) return;
+        if (index === value.length - 1) {
+            return;
+        }
         const next = [...value];
         [next[index + 1], next[index]] = [next[index], next[index + 1]];
         setValue(next);

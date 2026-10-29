@@ -21,7 +21,9 @@ export function ErrorAnchor({ id, children, style }: Props) {
     const ref = useRef<View>(null);
 
     useEffect(() => {
-        if (!request || anchor !== id) return;
+        if (!request || anchor !== id) {
+            return;
+        }
         // A tab that's just been switched to is still laying out - give it a moment before measuring
         const timer = setTimeout(() => scroll?.scrollToView(ref.current), 250);
         return () => clearTimeout(timer);

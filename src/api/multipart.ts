@@ -5,7 +5,9 @@ import { getConfig } from '../providers/ConfigProvider';
 export function toFormData(data: Record<string, any>): FormData {
     const fd = new FormData();
     const append = (key: string, val: any) => {
-        if (val === null || val === undefined) return;
+        if (val === null || val === undefined) {
+            return;
+        }
         if (Array.isArray(val)) {
             val.forEach((item, i) => append(`${key}[${i}]`, item));
         } else if (val && typeof val === 'object' && 'uri' in val) {

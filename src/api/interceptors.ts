@@ -30,7 +30,9 @@ async function refreshAccessToken(): Promise<string | null> {
     },
   );
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+      return null;
+  }
 
   const json = await res.json();
 

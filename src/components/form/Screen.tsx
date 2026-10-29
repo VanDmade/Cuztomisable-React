@@ -63,7 +63,9 @@ export function FormScreen({
     // that mustn't close a keyboard that's being kept open while scrolling
     const dragged = useRef(false);
     const tapToDismiss = () => {
-        if (!dragged.current) Keyboard.dismiss();
+        if (!dragged.current) {
+            Keyboard.dismiss();
+        }
     };
 
     const scroll = useMemo<FormScroll>(() => ({
@@ -71,7 +73,9 @@ export function FormScreen({
             const scrollView: any = scrollRef.current;
             // Measured against the scrolling content, so it's right however far down the form already is
             const content = scrollView?.getInnerViewRef?.() ?? scrollView?.getInnerViewNode?.();
-            if (!view || !content) return;
+            if (!view || !content) {
+                return;
+            }
             view.measureLayout(
                 content,
                 (_x, y) => scrollView.scrollTo({ y: Math.max(0, y - offset), animated: true }),

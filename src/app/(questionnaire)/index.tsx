@@ -29,8 +29,12 @@ type Value = QuestionnaireAnswer | undefined;
 const isOther = (value: Value): value is { other: true } => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 function isAnswered(value: Value): boolean {
-    if (value === undefined || value === null || value === '') return false;
-    if (Array.isArray(value)) return value.length > 0;
+    if (value === undefined || value === null || value === '') {
+        return false;
+    }
+    if (Array.isArray(value)) {
+        return value.length > 0;
+    }
     return true;
 }
 
@@ -113,7 +117,9 @@ export default function QuestionnaireScreen() {
             });
             setErrors(fieldErrors);
             const first = questions.findIndex((q) => fieldErrors[q.key]);
-            if (first >= 0) setCurrent(first);
+            if (first >= 0) {
+                setCurrent(first);
+            }
             else setErrors({ [question.key]: e?.message ?? 'Could not save your answers. Please try again.' });
         } finally {
             setSaving(false);
@@ -197,7 +203,9 @@ function QuestionInput({ question, value, onChange }: { question: QuestionnaireQ
                 ? Array.isArray(value) && value.includes(option.value as string | number)
                 : !isOther(value) && value === option.value;
             const pick = (option: QuestionnaireOption) => {
-                if (!multi) return onChange(option.value as string | number);
+                if (!multi) {
+                    return onChange(option.value as string | number);
+                }
                 const list = Array.isArray(value) ? value : [];
                 const v = option.value as string | number;
                 onChange(list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -288,7 +296,9 @@ function SourceList({ question, selected, onPick, other }: {
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        if (timer.current) clearTimeout(timer.current);
+        if (timer.current) {
+            clearTimeout(timer.current);
+        }
         setLoading(true);
         timer.current = setTimeout(() => {
             getQuestionnaireOptions(question.key, search.trim() || undefined)

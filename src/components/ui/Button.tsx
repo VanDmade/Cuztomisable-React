@@ -204,7 +204,9 @@ export default function Button({
     }, [theme, intent, variant, colors, disabled, loading]);
 
     const effectiveOnPress = (e: GestureResponderEvent) => {
-        if (disabled || loading) return;
+        if (disabled || loading) {
+            return;
+        }
         onPress?.(e);
     };
 

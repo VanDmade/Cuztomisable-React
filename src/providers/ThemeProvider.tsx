@@ -61,7 +61,9 @@ export const ThemeProvider = ({
     }, [mode, overrides]);
 
     // 🔥 Prevent flicker before loading stored preference
-    if (!loaded) return null;
+    if (!loaded) {
+        return null;
+    }
 
     return (
         <ThemeContext.Provider

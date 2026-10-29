@@ -66,7 +66,9 @@ export const FormAutocomplete = <T,>({
             justSelectedRef.current = false;
             return;
         }
-        if (value === undefined) setInternalValue(text);
+        if (value === undefined) {
+            setInternalValue(text);
+        }
         setOpen(true);
         onChangeText?.(text);
     };
@@ -76,18 +78,24 @@ export const FormAutocomplete = <T,>({
         setOpen(false);
         onSelect?.(item.value, item);
         if (fillOnSelect) {
-            if (value === undefined) setInternalValue(item.label);
+            if (value === undefined) {
+                setInternalValue(item.label);
+            }
             onChangeText?.(item.label);
         }
         if (clearOnSelect) {
-            if (value === undefined) setInternalValue('');
+            if (value === undefined) {
+                setInternalValue('');
+            }
             onChangeText?.('');
         }
     };
 
     const query = value !== undefined ? value : internalValue;
     const filtered = useMemo(() => {
-        if (!open || query.length < minChars) return [] as DropdownOption<T>[];
+        if (!open || query.length < minChars) {
+            return [] as DropdownOption<T>[];
+        }
         const q = query.toLowerCase();
         const filter = filterOption ?? ((opt: DropdownOption<T>, qText: string) => opt.label.toLowerCase().includes(qText));
         return options.filter((opt) => filter(opt, q));

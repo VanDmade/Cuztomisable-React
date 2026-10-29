@@ -64,9 +64,13 @@ export const ImageUploader: React.FC<Props> = ({
     }, [value]);
 
     const list: ImageItem[] = useMemo(() => {
-        if (!value) return [];
+        if (!value) {
+            return [];
+        }
 
-        if (isObjectMode) return value as ImageItem[];
+        if (isObjectMode) {
+            return value as ImageItem[];
+        }
 
         if (Array.isArray(value)) {
             return value.map((uri, i) => ({
@@ -89,7 +93,9 @@ export const ImageUploader: React.FC<Props> = ({
 
     const handlePick = useCallback(async () => {
         const ok = await askPermission();
-        if (!ok) return;
+        if (!ok) {
+            return;
+        }
 
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],

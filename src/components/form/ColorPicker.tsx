@@ -22,14 +22,18 @@ export function hsvToHex({ h, s, v }: Hsv): string {
 
 export function hexToHsv(value: string): Hsv | null {
     const match = value.trim().match(/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i);
-    if (!match) return null;
+    if (!match) {
+        return null;
+    }
     const raw = match[1].length === 3 ? match[1].split('').map((c) => c + c).join('') : match[1];
     const [r, g, b] = [0, 2, 4].map((i) => parseInt(raw.slice(i, i + 2), 16) / 255);
     const max = Math.max(r, g, b);
     const delta = max - Math.min(r, g, b);
     let h = 0;
     if (delta) {
-        if (max === r) h = 60 * (((g - b) / delta) % 6);
+        if (max === r) {
+            h = 60 * (((g - b) / delta) % 6);
+        }
         else if (max === g) h = 60 * ((b - r) / delta + 2);
         else h = 60 * ((r - g) / delta + 4);
     }
@@ -101,13 +105,17 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({ theme, value, onChange
             const { locationX, locationY, pageX, pageY } = e.nativeEvent;
             start.current = { x: locationX, y: locationY, pageX, pageY };
             onDragChange?.(true);
-            if (width) handler(locationX, locationY);
+            if (width) {
+                handler(locationX, locationY);
+            }
         },
         onResponderRelease: () => onDragChange?.(false),
         onResponderTerminate: () => onDragChange?.(false),
         onResponderMove: (e: GestureResponderEvent) => {
             const { pageX, pageY } = e.nativeEvent;
-            if (width) handler(start.current.x + pageX - start.current.pageX, start.current.y + pageY - start.current.pageY);
+            if (width) {
+                handler(start.current.x + pageX - start.current.pageX, start.current.y + pageY - start.current.pageY);
+            }
         },
     });
 

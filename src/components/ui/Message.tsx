@@ -18,7 +18,9 @@ export function Message() {
   const type = banner?.type ?? 'info';
   // Auto-dismiss timing
   const autoDuration = React.useMemo(() => {
-    if (!message) return 0;
+    if (!message) {
+        return 0;
+    }
     const words = message.split(/\s+/).length;
     return Math.max(words * 250, 2500);
   }, [message]);
@@ -41,7 +43,9 @@ export function Message() {
       return () => clearTimeout(timer);
     }
   }, [visible, autoDuration, clearMessage, slideAnim]);
-  if (!visible) return null;
+  if (!visible) {
+      return null;
+  }
   return (
     <Animated.View style={[
       styles.container,
