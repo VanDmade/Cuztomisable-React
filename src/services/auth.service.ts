@@ -74,6 +74,7 @@ export async function register(payload: {
     password: string;
     name?: string;
     phone: string;
+    country_code?: string;
 }): Promise<RegisterResponse> {
     const { data } = await api().post('/register', payload);
     if (!data || typeof data !== 'object') {

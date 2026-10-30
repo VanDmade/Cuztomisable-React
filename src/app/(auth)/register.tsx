@@ -26,7 +26,7 @@ export default function RegisterScreen() {
 
     const onSubmit = async () => {
         return runAction(async () => {
-            const data = await register(name.trim(), email.trim(), phone?.number?.trim(), password);
+            const data = await register(name.trim(), email.trim(), phone?.number?.trim(), password, phone?.countryCode);
             showMessage(data.message, 'success');
             router.push('/(auth)/login');
         });
@@ -64,8 +64,9 @@ export default function RegisterScreen() {
                         <Phone
                             value={phone}
                             onChange={handlePhoneChange}
-                            error={errors?.phone}
-                            onClearError={() => setErrors(prev => ({ ...prev, phone: undefined }))}
+                            // The country code has no field of its own - its error shows here, never nowhere
+                            error={errors?.phone ?? errors?.country_code}
+                            onClearError={() => setErrors(prev => ({ ...prev, phone: undefined, country_code: undefined }))}
                             disabled={busy} />
                         <FormInput
                             theme={theme}

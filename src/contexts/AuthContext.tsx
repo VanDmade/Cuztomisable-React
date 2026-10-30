@@ -34,7 +34,8 @@ type AuthCtx = {
     user: any | null;
     refreshUser: () => Promise<void>;
     login: (username: string, password: string) => Promise<LoginResult>;
-    register: (name: string, email: string, phone: string, password: string) => Promise<RegisterResponse>;
+    // countryCode: the phone's country (the server needs it whenever a phone number is given)
+    register: (name: string, email: string, phone: string, password: string, countryCode?: string) => Promise<RegisterResponse>;
     verifyMfaToken: (token: string) => Promise<VerifyMfaTokenResponse>;
     sendMfaCode: (token: string, type: string) => Promise<SendMfaCodeResponse>;
     finalizeMfa: (token: string, code: string) => Promise<FinalizeMfaResponse>;
@@ -127,11 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: string,
         email: string,
         phone: string,
-        password: string
+        password: string,
+        countryCode?: string
     ): Promise<RegisterResponse> => {
         setLoading(true);
         try {
-            return await registerService({ name, email, phone, password });
+            // Without the country code, any sign-up with a phone number was turned away
+            return await registerService({ name, email, phone, password, country_code: phone ? countryCode : undefined });
         } finally {
             setLoading(false);
         }
